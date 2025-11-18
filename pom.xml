@@ -3,41 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>io.superstudios.plugins</groupId>
-  <artifactId>diversion-scm</artifactId>
-  <version>1.0.0</version>
-  <packaging>hpi</packaging>
-  <name>Diversion SCM Plugin</name>
-  <description>Integrates Jenkins with Diversion for SCM operations.</description>
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>5.9</version>
+    <relativePath />
+  </parent>
   
-  <developers>
-    <developer>
-      <id>ianbain</id>
-      <name>Ian Bain</name>
-      <email>ian@superstudios.io</email>
-    </developer>
-  </developers>
-  
-  <licenses>
-    <license>
-      <name>MIT License</name>
-      <url>https://opensource.org/licenses/MIT</url>
-    </license>
-  </licenses>
-  
-  <url>https://github.com/ibain/jenkins-diversion-scm-plugin</url>
-  <scm>
-    <connection>scm:git:https://github.com/ibain/jenkins-diversion-scm-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:ibain/jenkins-diversion-scm-plugin.git</developerConnection>
-    <url>https://github.com/ibain/jenkins-diversion-scm-plugin</url>
-  </scm>
-
-  <properties>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -51,15 +23,45 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+  
+  <groupId>io.jenkins.plugins</groupId>
+  <artifactId>diversion-scm</artifactId>
+  <version>1.0.0</version>
+  <packaging>hpi</packaging>
+  <name>Diversion SCM Plugin</name>
+  <description>Jenkins SCM plugin integrating with Diversion.dev repositories. Provides pipeline checkout (Legacy SCM) and Global Pipeline Library support (Modern SCM) with full changelog display.</description>
+  
+  <developers>
+    <developer>
+      <id>ianbain</id>
+      <name>Ian Bain</name>
+      <email>ibain@mac.com</email>
+    </developer>
+  </developers>
+  
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
+  </licenses>
+  
+  <url>https://github.com/ibain/jenkins-diversion-scm-plugin</url>
+  <scm>
+    <connection>scm:git:https://github.com/ibain/jenkins-diversion-scm-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:ibain/jenkins-diversion-scm-plugin.git</developerConnection>
+    <url>https://github.com/ibain/jenkins-diversion-scm-plugin</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <properties>
+    <jenkins.version>2.504.3</jenkins.version>
+    <java.level>11</java.level>
+    <jenkins-test-harness.version>2.70</jenkins-test-harness.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
   <dependencies>
-    <!-- Jenkins Core -->
-    <dependency>
-      <groupId>org.jenkins-ci.main</groupId>
-      <artifactId>jenkins-core</artifactId>
-      <version>2.533</version>
-    </dependency>
-    
     <!-- Jenkins SCM API - matching installed version -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -110,14 +112,6 @@
       <version>2.24</version>
     </dependency>
     
-    <!-- Servlet API -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
-      <scope>provided</scope>
-    </dependency>
-    
     <!-- Testing -->
     <dependency>
       <groupId>junit</groupId>
@@ -127,11 +121,17 @@
     </dependency>
     
     <!-- Jenkins Test Harness -->
+    <!-- Version managed by jenkins-test-harness.version property -->
     <dependency>
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness</artifactId>
-      <version>2.70</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     
     <!-- Global Pipeline Library Support - will use whichever is installed -->
@@ -145,37 +145,18 @@
     -->
     
     <!-- Structs Plugin - Required for Modern SCM UI -->
+    <!-- Version managed by scm-api dependency (353.v261ea_40a_80fb_) -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
-      <version>337.v1b_04ea_4df7c8</version>
+      <version>353.v261ea_40a_80fb_</version>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
-        <configuration>
-          <source>11</source>
-          <target>11</target>
-        </configuration>
-      </plugin>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0</version>
-      </plugin>
-      
-      <plugin>
-        <groupId>org.jenkins-ci.tools</groupId>
-        <artifactId>maven-hpi-plugin</artifactId>
-        <version>3.40</version>
-        <extensions>true</extensions>
-      </plugin>
+      <!-- Parent POM provides maven-hpi-plugin and other standard plugins -->
+      <!-- Only override if you need specific versions or configurations -->
     </plugins>
   </build>
 </project>
