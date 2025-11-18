@@ -22,7 +22,6 @@ public class DiversionSCMFile extends SCMFile {
     private final String branchId;
     private final String path;
     private Boolean isDirectory;
-    private Boolean exists;
     
     protected DiversionSCMFile(@NonNull DiversionSCMFileSystem fileSystem, @NonNull String path,
                                DiversionApiClient apiClient, String repositoryId, String branchId) {
@@ -110,7 +109,6 @@ public class DiversionSCMFile extends SCMFile {
             
             DiversionSCMFile child = new DiversionSCMFile(this, childName);
             child.isDirectory = isDir;
-            child.exists = true;
             children.add(child);
         }
         
@@ -135,7 +133,6 @@ public class DiversionSCMFile extends SCMFile {
             // If path is empty or is a known directory structure, it's a directory
             if (path.isEmpty() || path.equals("vars") || path.equals("src") || path.equals("resources")) {
                 isDirectory = true;
-                exists = true;
                 return Type.DIRECTORY;
             }
             
@@ -154,7 +151,6 @@ public class DiversionSCMFile extends SCMFile {
             
             if (hasChildren) {
                 isDirectory = true;
-                exists = true;
                 return Type.DIRECTORY;
             }
             
@@ -162,17 +158,14 @@ public class DiversionSCMFile extends SCMFile {
             for (DiversionFile file : files) {
                 if (path.equals(file.getPath())) {
                     isDirectory = false;
-                    exists = true;
                     return Type.REGULAR_FILE;
                 }
             }
             
             // Doesn't exist
-            exists = false;
             return Type.NONEXISTENT;
             
-        } catch (Exception e) {
-            exists = false;
+        } catch (IOException | InterruptedException e) {
             return Type.NONEXISTENT;
         }
     }

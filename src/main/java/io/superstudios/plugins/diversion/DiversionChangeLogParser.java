@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Change log parser for Diversion commits.
@@ -87,7 +89,7 @@ public class DiversionChangeLogParser extends hudson.scm.ChangeLogParser {
             }
             
             return changeLogSet;
-        } catch (Exception e) {
+        } catch (IOException | ParserConfigurationException | SAXException e) {
             // If we can't parse the changelog file, return empty set
             // This prevents the build from failing
             System.err.println("Error parsing changelog: " + e.getMessage());

@@ -194,10 +194,13 @@ public class DiversionSCMSource extends SCMSource {
     }
     
     @Override
-    @CheckForNull
+    @NonNull
     public hudson.scm.SCM build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         // Return a DiversionSCM instance for library loading
         // This is required for Jenkins to track the SCM source
+        if (!(head instanceof DiversionSCMHead)) {
+            throw new IllegalArgumentException("Expected DiversionSCMHead, got " + head.getClass().getName());
+        }
         DiversionSCM scm = new DiversionSCM(repositoryId, credentialsId);
         scm.setBranch(((DiversionSCMHead) head).getBranchId());
         scm.setLibraryPath(libraryPath);

@@ -20,6 +20,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
@@ -123,13 +124,13 @@ public class DiversionSCM extends SCM {
                     // Try to get the file content to see if it exists
                     client.getFileContent(repositoryId, branch, path);
                     return path; // File exists, return this path
-                } catch (Exception e) {
+                } catch (IOException | InterruptedException e) {
                     // File doesn't exist at this path, try next
                     continue;
                 }
             }
             
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             // If search fails, fall back to simple name
         }
         
@@ -140,7 +141,7 @@ public class DiversionSCM extends SCM {
     @Override
     public void checkout(@NonNull Run<?, ?> build, @NonNull Launcher launcher, 
                         @NonNull FilePath workspace, @NonNull TaskListener listener, 
-                        File changelogFile, @NonNull SCMRevisionState baseline) throws IOException, InterruptedException {
+                        File changelogFile, @CheckForNull SCMRevisionState baseline) throws IOException, InterruptedException {
         
         listener.getLogger().println("Checking out from Diversion repository: " + repositoryId);
         listener.getLogger().println("Using credentials ID: " + credentialsId);
@@ -183,10 +184,13 @@ public class DiversionSCM extends SCM {
                             // Remove the library path prefix so files are at workspace root
                             String relativePath = filePath.substring(libPath.length() + 1);
                             FilePath targetFile = workspace.child(relativePath);
-                            targetFile.getParent().mkdirs();
+                            FilePath parent = targetFile.getParent();
+                            if (parent != null) {
+                                parent.mkdirs();
+                            }
                             targetFile.write(content, "UTF-8");
                             downloadedCount++;
-                        } catch (Exception e) {
+                        } catch (IOException | InterruptedException e) {
                             listener.getLogger().println("Warning: Could not download " + filePath + ": " + e.getMessage());
                         }
                     }
@@ -201,7 +205,10 @@ public class DiversionSCM extends SCM {
                 // Download the specific script file
                 String content = client.getFileContent(repositoryId, branch, scriptPath);
                 FilePath targetFile = workspace.child(scriptPath);
-                targetFile.getParent().mkdirs();
+                FilePath parent = targetFile.getParent();
+                if (parent != null) {
+                    parent.mkdirs();
+                }
                 targetFile.write(content, "UTF-8");
                 listener.getLogger().println("Downloaded: " + scriptPath);
             }
@@ -267,7 +274,7 @@ public class DiversionSCM extends SCM {
                                             break;
                                         }
                                     }
-                                } catch (Exception e) {
+                                } catch (ReflectiveOperationException e) {
                                     // Couldn't extract previous commit, will show all recent commits
                                 }
                             } else if (previousState instanceof DiversionSCMRevisionState) {
@@ -308,34 +315,34 @@ public class DiversionSCM extends SCM {
                         }
                         
                         // Write changelog as XML
-                        java.io.FileWriter writer = new java.io.FileWriter(changelogFile);
-                        writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-                        writer.write("<changelog>\n");
-                        
-                        for (DiversionCommit commit : commits) {
-                            writer.write("  <entry>\n");
-                            writer.write("    <commitId>" + escapeXml(commit.getCommitId()) + "</commitId>\n");
-                            writer.write("    <msg>" + escapeXml(commit.getCommitMessage()) + "</msg>\n");
-                            writer.write("    <author>" + escapeXml(commit.getAuthor().getName()) + "</author>\n");
-                            writer.write("    <timestamp>" + commit.getCreatedTs() + "</timestamp>\n");
+                        try (java.io.FileWriter writer = new java.io.FileWriter(changelogFile, java.nio.charset.StandardCharsets.UTF_8)) {
+                            writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+                            writer.write("<changelog>\n");
                             
-                            // Add changed files if available
-                            if (commit.getChangedFiles() != null && !commit.getChangedFiles().isEmpty()) {
-                                writer.write("    <files>\n");
-                                for (String file : commit.getChangedFiles()) {
-                                    writer.write("      <file>" + escapeXml(file) + "</file>\n");
+                            for (DiversionCommit commit : commits) {
+                                writer.write("  <entry>\n");
+                                writer.write("    <commitId>" + escapeXml(commit.getCommitId()) + "</commitId>\n");
+                                writer.write("    <msg>" + escapeXml(commit.getCommitMessage()) + "</msg>\n");
+                                writer.write("    <author>" + escapeXml(commit.getAuthor().getName()) + "</author>\n");
+                                writer.write("    <timestamp>" + commit.getCreatedTs() + "</timestamp>\n");
+                                
+                                // Add changed files if available
+                                if (commit.getChangedFiles() != null && !commit.getChangedFiles().isEmpty()) {
+                                    writer.write("    <files>\n");
+                                    for (String file : commit.getChangedFiles()) {
+                                        writer.write("      <file>" + escapeXml(file) + "</file>\n");
+                                    }
+                                    writer.write("    </files>\n");
                                 }
-                                writer.write("    </files>\n");
+                                
+                                writer.write("  </entry>\n");
                             }
                             
-                            writer.write("  </entry>\n");
+                            writer.write("</changelog>\n");
                         }
                         
-                        writer.write("</changelog>\n");
-                        writer.close();
-                        
                         listener.getLogger().println("Changelog file created with " + commits.size() + " commits");
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         listener.getLogger().println("Warning: Could not create changelog file: " + e.getMessage());
                         e.printStackTrace();
                     }
@@ -362,19 +369,23 @@ public class DiversionSCM extends SCM {
                     
                     listener.getLogger().println("Created SCM checkout action for change detection");
                 }
-            } catch (Exception e) {
+            } catch (ReflectiveOperationException e) {
                 // If we can't create the SCM checkout action, that's okay
                 // The build will still work, just without change detection
                 listener.getLogger().println("Note: Could not create SCM checkout action: " + e.getMessage());
             }
             
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             listener.getLogger().println("Error during checkout: " + e.getMessage());
             if (e.getCause() != null) {
                 listener.getLogger().println("Caused by: " + e.getCause().getMessage());
             }
             e.printStackTrace();
-            throw new IOException("Failed to checkout from Diversion: " + e.getMessage(), e);
+            if (e instanceof IOException) {
+                throw (IOException) e;
+            } else {
+                throw new IOException("Failed to checkout from Diversion: " + e.getMessage(), e);
+            }
         }
     }
     

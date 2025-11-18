@@ -76,6 +76,10 @@ public class DiversionSCMFileSystemBuilder extends SCMFileSystem.Builder {
             return null;
         }
         
+        if (!(head instanceof DiversionSCMHead)) {
+            return null;
+        }
+        
         DiversionSCMSource diversionSource = (DiversionSCMSource) source;
         DiversionSCMHead diversionHead = (DiversionSCMHead) head;
         

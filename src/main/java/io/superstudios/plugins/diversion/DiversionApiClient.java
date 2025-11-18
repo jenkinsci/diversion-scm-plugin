@@ -7,11 +7,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import hudson.model.Item;
+import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -37,7 +41,39 @@ public class DiversionApiClient {
     
     public DiversionApiClient(String credentialsId) {
         this.credentialsId = credentialsId;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = createHttpClient();
+    }
+    
+    /**
+     * Create HttpClient with proxy support from Jenkins ProxyConfiguration
+     */
+    private HttpClient createHttpClient() {
+        HttpClient.Builder builder = HttpClient.newBuilder();
+        
+        Jenkins jenkins = Jenkins.get();
+        ProxyConfiguration proxyConfig = jenkins.proxy;
+        
+        if (proxyConfig != null && proxyConfig.name != null) {
+            Proxy proxy = new Proxy(
+                Proxy.Type.HTTP,
+                new InetSocketAddress(proxyConfig.name, proxyConfig.port)
+            );
+            // Create a ProxySelector that returns the configured proxy
+            ProxySelector proxySelector = new ProxySelector() {
+                @Override
+                public List<Proxy> select(URI uri) {
+                    return Collections.singletonList(proxy);
+                }
+                
+                @Override
+                public void connectFailed(URI uri, java.net.SocketAddress sa, IOException ioe) {
+                    // Log or handle connection failures if needed
+                }
+            };
+            builder.proxy(proxySelector);
+        }
+        
+        return builder.build();
     }
     
     /**

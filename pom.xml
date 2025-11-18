@@ -38,19 +38,16 @@
     </license>
   </licenses>
   
-  <url>https://github.com/ibain/jenkins-diversion-scm-plugin</url>
+  <url>https://github.com/jenkinsci/diversion-scm-plugin</url>
   <scm>
-    <connection>scm:git:https://github.com/ibain/jenkins-diversion-scm-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:ibain/jenkins-diversion-scm-plugin.git</developerConnection>
-    <url>https://github.com/ibain/jenkins-diversion-scm-plugin</url>
-    <tag>HEAD</tag>
+    <connection>scm:git:https://github.com/jenkinsci/diversion-scm-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/diversion-scm-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/diversion-scm-plugin</url>
   </scm>
 
   <properties>
     <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <jenkins-test-harness.version>2.70</jenkins-test-harness.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
   </properties>
 
@@ -68,78 +65,29 @@
 
  <dependencies>
    <!-- Jenkins SCM API (plugin dependency, provided by Jenkins at runtime) -->
-   <!-- Scope is compile for testing, but won't be bundled in HPI -->
    <dependency>
      <groupId>org.jenkins-ci.plugins</groupId>
      <artifactId>scm-api</artifactId>
    </dependency>
    
-   <!-- Jakarta Servlet API for newer Jenkins; provided at runtime -->
-   <dependency>
-     <groupId>jakarta.servlet</groupId>
-     <artifactId>jakarta.servlet-api</artifactId>
-     <scope>provided</scope>
-   </dependency>
-   
-   <!-- Jenkins Credentials plugins (provided by Jenkins at runtime) -->
-   <!-- Scope is compile for testing, but won't be bundled in HPI -->
+   <!-- Jenkins Credentials plugin (provided by Jenkins at runtime) -->
    <dependency>
      <groupId>org.jenkins-ci.plugins</groupId>
      <artifactId>credentials</artifactId>
    </dependency>
    
+   <!-- Plain Credentials - needed for StringCredentials type -->
+   <!-- maven-hpi-plugin requires compile scope for testing -->
    <dependency>
      <groupId>org.jenkins-ci.plugins</groupId>
      <artifactId>plain-credentials</artifactId>
    </dependency>
    
-   <!-- HTTP Client (4.x API) - using Jenkins API plugin -->
-   <dependency>
-     <groupId>org.jenkins-ci.plugins</groupId>
-     <artifactId>apache-httpcomponents-client-4-api</artifactId>
-   </dependency>
-   
-   <!-- JSON Processing - using Jenkins API plugin -->
+   <!-- Jackson2 API - needed for JSON parsing (provided by Jenkins) -->
    <dependency>
      <groupId>org.jenkins-ci.plugins</groupId>
      <artifactId>jackson2-api</artifactId>
    </dependency>
-   
-   <!-- Workflow Step API (pipeline integration, provided by Jenkins at runtime) -->
-   <!-- Scope is compile for testing, but won't be bundled in HPI -->
-   <dependency>
-     <groupId>org.jenkins-ci.plugins.workflow</groupId>
-     <artifactId>workflow-step-api</artifactId>
-   </dependency>
-   
-   <!-- Structs Plugin - required for Modern SCM UI, provided by Jenkins at runtime -->
-   <!-- Scope is compile for testing, but won't be bundled in HPI -->
-   <dependency>
-     <groupId>org.jenkins-ci.plugins</groupId>
-     <artifactId>structs</artifactId>
-   </dependency>
-  
-  <!-- Testing -->
-  <dependency>
-    <groupId>junit</groupId>
-    <artifactId>junit</artifactId>
-    <version>4.13.2</version>
-    <scope>test</scope>
-  </dependency>
-  
-  <!-- Jenkins Test Harness (version via property) -->
-  <dependency>
-    <groupId>org.jenkins-ci.main</groupId>
-    <artifactId>jenkins-test-harness</artifactId>
-    <version>${jenkins-test-harness.version}</version>
-    <scope>test</scope>
-    <exclusions>
-      <exclusion>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-      </exclusion>
-    </exclusions>
-  </dependency>
   
   <!-- Optional: Global Pipeline Library support
        Commented out to avoid forcing installation of a deprecated plugin.

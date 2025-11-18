@@ -62,7 +62,7 @@ public class DiversionSCMFileSystem extends SCMFileSystem {
                     // Fallback to current time if we can't get commit info
                     cachedLastModified = System.currentTimeMillis();
                 }
-            } catch (Exception e) {
+            } catch (IOException | InterruptedException e) {
                 // If we can't get commit info, return current time
                 // This ensures libraries are reloaded on next check
                 cachedLastModified = System.currentTimeMillis();
