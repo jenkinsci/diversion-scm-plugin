@@ -1,0 +1,27 @@
+<div>
+  <p>
+    The base path within the repository where the library files are located.
+  </p>
+  <p>
+    <strong>Expected Structure:</strong>
+  </p>
+  <ul>
+    <li><code>vars/</code> - Global variables and functions (e.g., <code>vars/uploadToGooglePlay.groovy</code>)</li>
+    <li><code>src/</code> - Shared classes (optional)</li>
+    <li><code>resources/</code> - Resource files (optional)</li>
+  </ul>
+  <p>
+    <strong>Examples:</strong>
+  </p>
+  <ul>
+    <li><code>Meta/Jenkins/SharedLib</code> - If your library is at <code>Meta/Jenkins/SharedLib/vars/</code></li>
+    <li><code>jenkins-lib</code> - If your library is at repository root <code>jenkins-lib/vars/</code></li>
+    <li><code>.</code> or leave empty - If <code>vars/</code> is at repository root</li>
+  </ul>
+  <p>
+    Jenkins will look for <code>vars/</code>, <code>src/</code>, and <code>resources/</code> directories 
+    within this base path.
+  </p>
+</div>
+
+

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+  
+  <f:entry title="Credentials" field="credentialsId">
+    <c:select />
+  </f:entry>
+  
+  <f:entry title="Repository" field="repositoryId">
+    <f:select fillDependsOn="credentialsId" />
+  </f:entry>
+  
+  <f:entry title="Default Branch" field="defaultBranch">
+    <f:select fillDependsOn="credentialsId repositoryId" />
+  </f:entry>
+  
+  <f:entry title="Library Base Path" field="libraryPath">
+    <f:select fillDependsOn="credentialsId repositoryId defaultBranch" />
+  </f:entry>
+  
+</j:jelly>
+

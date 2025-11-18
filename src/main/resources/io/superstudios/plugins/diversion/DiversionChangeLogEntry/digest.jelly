@@ -1,0 +1,15 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!-- This template renders the one-line summary of a change in the Changes page -->
+  <j:set var="commitId" value="${it.commitId}"/>
+  <j:set var="authorName" value="${it.diversionAuthor != null ? it.diversionAuthor.name : (it.author != null ? it.author.displayName : 'Unknown')}"/>
+  <j:choose>
+    <j:when test="${commitId != null and commitId != ''}">
+      <b>${commitId}</b> — ${it.msg} — ${authorName}
+    </j:when>
+    <j:otherwise>
+      <b>Commit</b> — ${it.msg} — ${authorName}
+    </j:otherwise>
+  </j:choose>
+</j:jelly>
+

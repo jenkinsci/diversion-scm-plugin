@@ -1,0 +1,15 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!-- Template for the ChangeLogSet - renders all entries with commit IDs -->
+  <ol>
+    <j:forEach var="cs" items="${it.items}" varStatus="loop">
+      <li>
+        <a name="detail${loop.index}"></a>
+        <!-- Use our custom entry template that includes commit ID -->
+        <st:include it="${cs}" page="digest.jelly"/>
+        <a href="${rootURL}/${cs.parent.run.url}changes#detail${loop.index}">/ detail</a>
+      </li>
+    </j:forEach>
+  </ol>
+</j:jelly>
+

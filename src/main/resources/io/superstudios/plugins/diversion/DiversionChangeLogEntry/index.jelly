@@ -1,0 +1,56 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!-- This template renders the full detail page when clicking on a change -->
+  <l:layout title="Change ${it.commitId}">
+    <j:set var="build" value="${it.parent.run}"/>
+    <st:include page="sidepanel.jelly" it="${build}"/>
+    <l:main-panel>
+      <h1>Change ${it.commitId}</h1>
+      
+      <table class="pane">
+        <tr>
+          <td class="pane-header">Commit ID</td>
+          <td><j:choose>
+            <j:when test="${it.commitId != null and it.commitId != ''}">${it.commitId}</j:when>
+            <j:otherwise><em>No commit ID available</em></j:otherwise>
+          </j:choose></td>
+        </tr>
+        <tr>
+          <td class="pane-header">Author</td>
+          <td><j:choose>
+            <j:when test="${it.diversionAuthor != null and it.diversionAuthor.name != null}">
+              ${it.diversionAuthor.name}
+              <j:if test="${it.diversionAuthor.email != null and it.diversionAuthor.email != ''}">
+                &lt;${it.diversionAuthor.email}&gt;
+              </j:if>
+            </j:when>
+            <j:otherwise>${it.author != null ? it.author.displayName : 'Unknown'}</j:otherwise>
+          </j:choose></td>
+        </tr>
+        <tr>
+          <td class="pane-header">Date</td>
+          <td><st:bind value="${it.date}" var="date"/>
+            <j:out value="${date}"/>
+          </td>
+        </tr>
+        <tr>
+          <td class="pane-header">Message</td>
+          <td style="white-space: pre-wrap;">${it.msg}</td>
+        </tr>
+      </table>
+      
+      <h2>Files Changed</h2>
+      <j:if test="${!it.affectedPaths.isEmpty()}">
+        <ul>
+          <j:forEach var="path" items="${it.affectedPaths}">
+            <li>${path}</li>
+          </j:forEach>
+        </ul>
+      </j:if>
+      <j:if test="${it.affectedPaths.isEmpty()}">
+        <p><em>No file information available from Diversion API</em></p>
+      </j:if>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
+

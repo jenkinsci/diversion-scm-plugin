@@ -1,0 +1,5 @@
+<?jelly escape-by-default='true'?>
+<div>
+    <p>Integrates Jenkins with Diversion for SCM operations.</p>
+    <p>This plugin enables Jenkins to use Diversion repositories as SCM sources for both traditional pipeline jobs and Global Pipeline Libraries.</p>
+</div>
