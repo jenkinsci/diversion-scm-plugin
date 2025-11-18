@@ -19,6 +19,8 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -442,6 +444,7 @@ public class DiversionSCM extends SCM {
         /**
          * Get list of available credentials for Diversion API tokens (Secret Text type)
          */
+        @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item context, 
                                                      @QueryParameter String credentialsId) {
             // Check CONFIGURE permission for legacy SCM
@@ -454,27 +457,61 @@ public class DiversionSCM extends SCM {
         /**
          * Populate repository dropdown
          */
+        @RequirePOST
         public ListBoxModel doFillRepositoryIdItems(@AncestorInPath Item context,
                                                     @QueryParameter String credentialsId) {
+            // Check permissions before accessing credentials
+            if (context == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                // User must have at least one of these permissions
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return new ListBoxModel();
+                }
+            }
             return DiversionUIHelper.fillRepositoryIdItems(credentialsId, "Error");
         }
         
         /**
          * Populate branch dropdown
          */
+        @RequirePOST
         public ListBoxModel doFillBranchItems(@AncestorInPath Item context,
                                               @QueryParameter String credentialsId,
                                               @QueryParameter String repositoryId) {
+            // Check permissions before accessing credentials
+            if (context == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                // User must have at least one of these permissions
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return new ListBoxModel();
+                }
+            }
             return DiversionUIHelper.fillBranchItems(credentialsId, repositoryId, "Error");
         }
         
         /**
          * Populate script path dropdown with pipeline scripts
          */
+        @RequirePOST
         public ListBoxModel doFillScriptPathItems(@AncestorInPath Item context,
                                                   @QueryParameter String credentialsId,
                                                   @QueryParameter String repositoryId,
                                                   @QueryParameter String branch) {
+            // Check permissions before accessing credentials
+            if (context == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                // User must have at least one of these permissions
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return new ListBoxModel();
+                }
+            }
+            
             ListBoxModel items = new ListBoxModel();
             
             // Default auto-detect option

@@ -18,8 +18,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.jenkinsci.Symbol;
 import hudson.model.Item;
+import jenkins.model.Jenkins;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 
 import java.io.IOException;
 import java.util.List;
@@ -227,28 +230,62 @@ public class DiversionSCMSource extends SCMSource {
         /**
          * Populate repository dropdown with available repositories
          */
+        @RequirePOST
         public ListBoxModel doFillRepositoryIdItems(@AncestorInPath Item context,
                                                     @QueryParameter String credentialsId) {
+            // Check permissions before accessing credentials
+            if (context == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                // User must have at least one of these permissions
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return new ListBoxModel();
+                }
+            }
             return DiversionUIHelper.fillRepositoryIdItems(credentialsId, "Error loading repositories");
         }
         
         /**
          * Populate branch dropdown with available branches
          */
+        @RequirePOST
         public ListBoxModel doFillDefaultBranchItems(@AncestorInPath Item context,
                                                      @QueryParameter String credentialsId,
                                                      @QueryParameter String repositoryId) {
+            // Check permissions before accessing credentials
+            if (context == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                // User must have at least one of these permissions
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return new ListBoxModel();
+                }
+            }
             return DiversionUIHelper.fillBranchItems(credentialsId, repositoryId, "Error loading branches");
         }
         
         /**
          * Populate library path dropdown with directories from repository
          */
+        @RequirePOST
         public ListBoxModel doFillLibraryPathItems(@AncestorInPath Item context,
                                                    @QueryParameter String credentialsId,
                                                    @QueryParameter String repositoryId,
                                                    @QueryParameter String defaultBranch,
                                                    @QueryParameter String libraryPath) {
+            // Check permissions before accessing credentials
+            if (context == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                // User must have at least one of these permissions
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return new ListBoxModel();
+                }
+            }
+            
             ListBoxModel items = new ListBoxModel();
             
             // Always include current value first
@@ -315,6 +352,7 @@ public class DiversionSCMSource extends SCMSource {
         /**
          * Populate credentials dropdown
          */
+        @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item context,
                                                      @QueryParameter String credentialsId) {
             return DiversionUIHelper.fillCredentialsIdItems(context, credentialsId);
