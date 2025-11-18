@@ -2,9 +2,9 @@
 
 A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.dev) repositories, providing both pipeline checkout and Global Pipeline Library support.
 
-**Author:** Ian Bain (ian@superstudios.io)  
+**Author:** Ian Bain (ibain@mac.com)  
 **License:** MIT  
-**Version:** 1.0.1
+**Version:** 1.0.1-SNAPSHOT
 
 ## Features
 
@@ -53,7 +53,7 @@ A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.
    mvn clean package -DskipTests
    ```
    
-   This creates the HPI file at `target/diversion-scm-1.0.0.hpi`
+   This creates the HPI file at `target/diversion-scm-1.0.1-SNAPSHOT.hpi`
 
 3. **Install the plugin**:
    - Go to Jenkins → Manage Jenkins → Manage Plugins
@@ -70,7 +70,7 @@ cd diversion-scm-plugin
 mvn clean package -DskipTests
 
 # Deploy to Jenkins pod
-kubectl cp target/diversion-scm-1.0.0.hpi default/jenkins-0:/var/jenkins_home/plugins/diversion-scm.jpi
+kubectl cp target/diversion-scm-1.0.1-SNAPSHOT.hpi default/jenkins-0:/var/jenkins_home/plugins/diversion-scm.jpi
 
 # Restart Jenkins
 kubectl delete pod jenkins-0
@@ -299,12 +299,7 @@ The plugin follows Jenkins plugin best practices:
 
 ### Debug Scripts
 
-Debug scripts are available in the repository root:
-- `debug-changelog.groovy` - Inspect changelog entries
-- `test-template-discovery.groovy` - Check if templates are found
-- `test-which-template.groovy` - See which templates Jenkins uses
-
-Run these in Jenkins Script Console (Manage Jenkins → Script Console).
+Debug scripts can be created as needed for troubleshooting. Run any Groovy scripts in Jenkins Script Console (Manage Jenkins → Script Console).
 
 ### Debug Logging
 
@@ -315,6 +310,13 @@ Enable debug logging for the plugin:
 3. Set log level to `FINE` or `FINEST`
 
 ## Recent Improvements
+
+### Version 1.0.1-SNAPSHOT
+
+- ✅ Updated to Java 17 (matches Jenkins baseline requirements)
+- ✅ Migrated to BOM-based dependency management (cleaner, more maintainable)
+- ✅ Updated Jenkins baseline to 2.504.3
+- ✅ Improved dependency version management using Jenkins BOM
 
 ### Version 1.0.0
 
