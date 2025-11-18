@@ -29,6 +29,12 @@ A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.
 - **Detailed Views**: Full commit details including author, date, message, and changed files
 - **Proper Navigation**: Working detail page links from the Changes page
 
+### Security Features
+- **Credential Protection**: Permission checks prevent unauthorized credential enumeration
+- **CSRF Protection**: All external API calls are protected from cross-site request forgery attacks
+- **Authorization**: Proper permission checks ensure only authorized users can access sensitive operations
+- **Security Scanning**: Plugin passes Jenkins CodeQL security scans
+
 ## Prerequisites
 
 - Jenkins 2.504.3 or later
@@ -317,11 +323,16 @@ Enable debug logging for the plugin:
 - ✅ Migrated to BOM-based dependency management (cleaner, more maintainable)
 - ✅ Updated Jenkins baseline to 2.504.3
 - ✅ Improved dependency version management using Jenkins BOM
-- ✅ Updated parent POM to version 5.24 (Jenkins requirement)
+- ✅ Updated parent POM to version 5.28 (Jenkins requirement)
 - ✅ Replaced direct dependencies with Jenkins API plugins:
   - `httpclient` → `apache-httpcomponents-client-4-api`
   - `jackson-databind` → `jackson2-api`
 - ✅ Added security scanning workflow and dependency update automation
+- ✅ **Security Enhancements:**
+  - Credential enumeration protection (permission checks before accessing credentials)
+  - CSRF protection (`@RequirePOST` annotations on external API calls)
+  - Explicit permission checks using `checkPermission()` for better security scanning recognition
+  - All security findings from Jenkins CodeQL scans resolved
 
 ### Version 1.0.0
 
