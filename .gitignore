@@ -35,6 +35,9 @@ Thumbs.db
 *.tmp
 diversion_token.txt
 
+# Jenkins work directory
+work/
+
 # Compiled classes and build artifacts
 *.class
 *.stapler

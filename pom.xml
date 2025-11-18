@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.9</version>
+    <version>5.24</version>
     <relativePath />
   </parent>
   
@@ -31,14 +31,6 @@
   <name>Diversion SCM Plugin</name>
   <description>Jenkins SCM plugin integrating with Diversion.dev repositories. Provides pipeline checkout (Legacy SCM) and Global Pipeline Library support (Modern SCM) with full changelog display.</description>
   
-  <developers>
-    <developer>
-      <id>ianbain</id>
-      <name>Ian Bain</name>
-      <email>ibain@mac.com</email>
-    </developer>
-  </developers>
-  
   <licenses>
     <license>
       <name>MIT License</name>
@@ -57,9 +49,9 @@
   <properties>
     <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <java.level>17</java.level>
     <jenkins-test-harness.version>2.70</jenkins-test-harness.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
   </properties>
 
   <dependencyManagement>
@@ -101,18 +93,16 @@
      <artifactId>plain-credentials</artifactId>
    </dependency>
    
-   <!-- HTTP Client (4.x API) -->
+   <!-- HTTP Client (4.x API) - using Jenkins API plugin -->
    <dependency>
-     <groupId>org.apache.httpcomponents</groupId>
-     <artifactId>httpclient</artifactId>
-     <version>4.5.13</version>
+     <groupId>org.jenkins-ci.plugins</groupId>
+     <artifactId>apache-httpcomponents-client-4-api</artifactId>
    </dependency>
    
-   <!-- JSON Processing -->
+   <!-- JSON Processing - using Jenkins API plugin -->
    <dependency>
-     <groupId>com.fasterxml.jackson.core</groupId>
-     <artifactId>jackson-databind</artifactId>
-     <version>2.15.3</version>
+     <groupId>org.jenkins-ci.plugins</groupId>
+     <artifactId>jackson2-api</artifactId>
    </dependency>
    
    <!-- Workflow Step API (pipeline integration, provided by Jenkins at runtime) -->
