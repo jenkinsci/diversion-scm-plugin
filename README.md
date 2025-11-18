@@ -317,6 +317,11 @@ Enable debug logging for the plugin:
 - ✅ Migrated to BOM-based dependency management (cleaner, more maintainable)
 - ✅ Updated Jenkins baseline to 2.504.3
 - ✅ Improved dependency version management using Jenkins BOM
+- ✅ Updated parent POM to version 5.24 (Jenkins requirement)
+- ✅ Replaced direct dependencies with Jenkins API plugins:
+  - `httpclient` → `apache-httpcomponents-client-4-api`
+  - `jackson-databind` → `jackson2-api`
+- ✅ Added security scanning workflow and dependency update automation
 
 ### Version 1.0.0
 
