@@ -26,7 +26,7 @@
   
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>diversion-scm</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Diversion SCM Plugin</name>
   <description>Jenkins SCM plugin integrating with Diversion.dev repositories. Provides pipeline checkout (Legacy SCM) and Global Pipeline Library support (Modern SCM) with full changelog display.</description>
@@ -55,103 +55,115 @@
   </scm>
 
   <properties>
-    <jenkins.version>2.504.3</jenkins.version>
-    <java.level>11</java.level>
+    <jenkins.baseline>2.504</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <java.level>17</java.level>
     <jenkins-test-harness.version>2.70</jenkins-test-harness.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <dependencyManagement>
   <dependencies>
-    <!-- Jenkins SCM API - matching installed version -->
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>scm-api</artifactId>
-      <version>712.v8846fdd68c88</version>
-    </dependency>
-    
-    <!-- Jakarta Servlet API for newer Jenkins -->
-    <dependency>
-      <groupId>jakarta.servlet</groupId>
-      <artifactId>jakarta.servlet-api</artifactId>
-      <version>5.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-    
-    <!-- Jenkins Credentials -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>credentials</artifactId>
-      <version>2.6.2</version>
-    </dependency>
-    
-    <!-- Jenkins Plain Credentials -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>plain-credentials</artifactId>
-      <version>1.8</version>
-    </dependency>
-    
-    <!-- HTTP Client -->
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.13</version>
-    </dependency>
-    
-    <!-- JSON Processing -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.15.2</version>
-    </dependency>
-    
-    <!-- Workflow Step -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-step-api</artifactId>
-      <version>2.24</version>
-    </dependency>
-    
-    <!-- Testing -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
-    </dependency>
-    
-    <!-- Jenkins Test Harness -->
-    <!-- Version managed by jenkins-test-harness.version property -->
-    <dependency>
-      <groupId>org.jenkins-ci.main</groupId>
-      <artifactId>jenkins-test-harness</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    
-    <!-- Global Pipeline Library Support - will use whichever is installed -->
-    <!-- Commented out to avoid blocking deprecated plugin removal -->
-    <!--
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>pipeline-groovy-lib</artifactId>
-      <version>725.ve6b_9cd446898</version>
-    </dependency>
-    -->
-    
-    <!-- Structs Plugin - Required for Modern SCM UI -->
-    <!-- Version managed by scm-api dependency (353.v261ea_40a_80fb_) -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-      <version>353.v261ea_40a_80fb_</version>
+      <groupId>io.jenkins.tools.bom</groupId>
+      <artifactId>bom-2.504.x</artifactId>
+      <version>5681.v79d2ddf61465</version>
+      <type>pom</type>
+      <scope>import</scope>
     </dependency>
   </dependencies>
+  </dependencyManagement>
+
+ <dependencies>
+   <!-- Jenkins SCM API (plugin dependency, provided by Jenkins at runtime) -->
+   <!-- Scope is compile for testing, but won't be bundled in HPI -->
+   <dependency>
+     <groupId>org.jenkins-ci.plugins</groupId>
+     <artifactId>scm-api</artifactId>
+   </dependency>
+   
+   <!-- Jakarta Servlet API for newer Jenkins; provided at runtime -->
+   <dependency>
+     <groupId>jakarta.servlet</groupId>
+     <artifactId>jakarta.servlet-api</artifactId>
+     <scope>provided</scope>
+   </dependency>
+   
+   <!-- Jenkins Credentials plugins (provided by Jenkins at runtime) -->
+   <!-- Scope is compile for testing, but won't be bundled in HPI -->
+   <dependency>
+     <groupId>org.jenkins-ci.plugins</groupId>
+     <artifactId>credentials</artifactId>
+   </dependency>
+   
+   <dependency>
+     <groupId>org.jenkins-ci.plugins</groupId>
+     <artifactId>plain-credentials</artifactId>
+   </dependency>
+   
+   <!-- HTTP Client (4.x API) -->
+   <dependency>
+     <groupId>org.apache.httpcomponents</groupId>
+     <artifactId>httpclient</artifactId>
+     <version>4.5.13</version>
+   </dependency>
+   
+   <!-- JSON Processing -->
+   <dependency>
+     <groupId>com.fasterxml.jackson.core</groupId>
+     <artifactId>jackson-databind</artifactId>
+     <version>2.15.3</version>
+   </dependency>
+   
+   <!-- Workflow Step API (pipeline integration, provided by Jenkins at runtime) -->
+   <!-- Scope is compile for testing, but won't be bundled in HPI -->
+   <dependency>
+     <groupId>org.jenkins-ci.plugins.workflow</groupId>
+     <artifactId>workflow-step-api</artifactId>
+   </dependency>
+   
+   <!-- Structs Plugin - required for Modern SCM UI, provided by Jenkins at runtime -->
+   <!-- Scope is compile for testing, but won't be bundled in HPI -->
+   <dependency>
+     <groupId>org.jenkins-ci.plugins</groupId>
+     <artifactId>structs</artifactId>
+   </dependency>
+  
+  <!-- Testing -->
+  <dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.13.2</version>
+    <scope>test</scope>
+  </dependency>
+  
+  <!-- Jenkins Test Harness (version via property) -->
+  <dependency>
+    <groupId>org.jenkins-ci.main</groupId>
+    <artifactId>jenkins-test-harness</artifactId>
+    <version>${jenkins-test-harness.version}</version>
+    <scope>test</scope>
+    <exclusions>
+      <exclusion>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+      </exclusion>
+    </exclusions>
+  </dependency>
+  
+  <!-- Optional: Global Pipeline Library support
+       Commented out to avoid forcing installation of a deprecated plugin.
+  -->
+  <!--
+  <dependency>
+    <groupId>org.jenkins-ci.plugins.workflow</groupId>
+    <artifactId>pipeline-groovy-lib</artifactId>
+    <scope>provided</scope>
+    <optional>true</optional>
+  </dependency>
+  -->
+</dependencies>
+
 
   <build>
     <plugins>

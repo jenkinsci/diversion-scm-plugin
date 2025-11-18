@@ -4,7 +4,7 @@ A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.
 
 **Author:** Ian Bain (ian@superstudios.io)  
 **License:** MIT  
-**Version:** 1.0.0
+**Version:** 1.0.1
 
 ## Features
 
@@ -31,8 +31,8 @@ A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.
 
 ## Prerequisites
 
-- Jenkins 2.401.3 or later
-- Java 11 or later
+- Jenkins 2.504.3 or later
+- Java 17 or later
 - Maven 3.6+ (for building from source)
 - Diversion API refresh token ([Get one here](https://docs.diversion.dev/ci-cd))
 
