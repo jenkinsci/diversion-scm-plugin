@@ -1,7 +1,6 @@
 package io.superstudios.plugins.diversion;
 
 import hudson.model.Item;
-import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
@@ -38,21 +37,13 @@ public class DiversionUIHelper {
         items.add("- Select credentials -", "");
         
         // Get all Secret Text credentials
-        // Note: ACL.SYSTEM2 is recommended but returns Spring Security Authentication,
-        // while CredentialsProvider.lookupCredentials expects Acegi Authentication.
-        // Using ACL.SYSTEM for now as it's compatible with the CredentialsProvider API.
-        // TODO: Update when CredentialsProvider API supports Spring Security Authentication
-        org.acegisecurity.Authentication auth;
-        if (context instanceof hudson.model.Queue.Task) {
-            auth = ((hudson.model.Queue.Task) context).getDefaultAuthentication();
-        } else {
-            auth = ACL.SYSTEM;
-        }
+        // Use modern Credentials API pattern: pass null for Authentication and let Jenkins
+        // resolve security internally based on the context (Item)
         List<StringCredentials> credentials = 
             CredentialsProvider.lookupCredentials(
                 StringCredentials.class,
                 context,
-                auth,
+                null,  // null auth → Jenkins uses default context
                 Collections.emptyList()
             );
         
