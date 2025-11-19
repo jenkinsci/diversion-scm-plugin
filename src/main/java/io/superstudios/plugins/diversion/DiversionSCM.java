@@ -447,10 +447,7 @@ public class DiversionSCM extends SCM {
         @RequirePOST
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item context, 
                                                      @QueryParameter String credentialsId) {
-            // Check CONFIGURE permission for legacy SCM
-            if (context == null || !context.hasPermission(Item.CONFIGURE)) {
-                return new ListBoxModel();
-            }
+            // Permission check is handled in DiversionUIHelper
             return DiversionUIHelper.fillCredentialsIdItems(context, credentialsId);
         }
         
@@ -462,11 +459,11 @@ public class DiversionSCM extends SCM {
                                                     @QueryParameter String credentialsId) {
             // Check permissions before accessing credentials
             if (context == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
             } else {
-                // User must have at least one of these permissions
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
                 }
             }
@@ -482,11 +479,11 @@ public class DiversionSCM extends SCM {
                                               @QueryParameter String repositoryId) {
             // Check permissions before accessing credentials
             if (context == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
             } else {
-                // User must have at least one of these permissions
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
                 }
             }
@@ -503,11 +500,11 @@ public class DiversionSCM extends SCM {
                                                   @QueryParameter String branch) {
             // Check permissions before accessing credentials
             if (context == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
             } else {
-                // User must have at least one of these permissions
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
                 }
             }

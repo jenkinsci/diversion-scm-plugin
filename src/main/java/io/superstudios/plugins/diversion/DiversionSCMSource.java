@@ -235,11 +235,11 @@ public class DiversionSCMSource extends SCMSource {
                                                     @QueryParameter String credentialsId) {
             // Check permissions before accessing credentials
             if (context == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
             } else {
-                // User must have at least one of these permissions
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
                 }
             }
@@ -255,11 +255,11 @@ public class DiversionSCMSource extends SCMSource {
                                                      @QueryParameter String repositoryId) {
             // Check permissions before accessing credentials
             if (context == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
             } else {
-                // User must have at least one of these permissions
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
                 }
             }
@@ -277,11 +277,11 @@ public class DiversionSCMSource extends SCMSource {
                                                    @QueryParameter String libraryPath) {
             // Check permissions before accessing credentials
             if (context == null) {
-                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
+                    return new ListBoxModel();
+                }
             } else {
-                // User must have at least one of these permissions
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
                 }
             }

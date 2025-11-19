@@ -39,60 +39,13 @@ A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.
 
 - Jenkins 2.504.3 or later
 - Java 17 or later
-- Maven 3.6+ (for building from source)
 - Diversion API refresh token ([Get one here](https://docs.diversion.dev/ci-cd))
 
 ## Installation
 
-### Option 1: Build from Source (Recommended)
+The plugin can be installed from the [Jenkins Plugin Manager](https://plugins.jenkins.io/diversion-scm/) once published, or built from source.
 
-1. **Clone the plugin repository**:
-   ```bash
-   git clone <repository-url>
-   cd diversion-scm-plugin
-   ```
-
-2. **Build the plugin**:
-   ```bash
-   ./build.sh
-   # Or manually:
-   mvn clean package -DskipTests
-   ```
-   
-   This creates the HPI file at `target/diversion-scm-1.0.1-SNAPSHOT.hpi`
-
-3. **Install the plugin**:
-   - Go to Jenkins → Manage Jenkins → Manage Plugins
-   - Click "Advanced" tab
-   - Upload the generated `.hpi` file
-
-### Option 2: Deploy to Kubernetes Jenkins
-
-If you're running Jenkins in Kubernetes:
-
-```bash
-# Build the plugin
-cd diversion-scm-plugin
-mvn clean package -DskipTests
-
-# Deploy to Jenkins pod
-kubectl cp target/diversion-scm-1.0.1-SNAPSHOT.hpi default/jenkins-0:/var/jenkins_home/plugins/diversion-scm.jpi
-
-# Restart Jenkins
-kubectl delete pod jenkins-0
-```
-
-The plugin will be automatically loaded on Jenkins restart.
-
-### Option 3: Development Mode
-
-Run Jenkins with the plugin in development mode:
-
-```bash
-mvn hpi:run
-```
-
-This starts Jenkins at `http://localhost:8080/jenkins` with the plugin loaded.
+**For developers:** See [DEVELOPMENT.md](DEVELOPMENT.md) for build instructions and development setup.
 
 ## Configuration
 
@@ -303,18 +256,6 @@ The plugin follows Jenkins plugin best practices:
    - Check that commits exist in the repository
    - Verify the changelog XML file exists in the build directory
 
-### Debug Scripts
-
-Debug scripts can be created as needed for troubleshooting. Run any Groovy scripts in Jenkins Script Console (Manage Jenkins → Script Console).
-
-### Debug Logging
-
-Enable debug logging for the plugin:
-
-1. Go to **Manage Jenkins** → **System Log**
-2. Add new log recorder for `io.superstudios.plugins.diversion`
-3. Set log level to `FINE` or `FINEST`
-
 ## Recent Improvements
 
 ### Version 1.0.1-SNAPSHOT
@@ -331,7 +272,8 @@ Enable debug logging for the plugin:
 - ✅ **Security Enhancements:**
   - Credential enumeration protection (permission checks before accessing credentials)
   - CSRF protection (`@RequirePOST` annotations on external API calls)
-  - Explicit permission checks using `checkPermission()` for better security scanning recognition
+  - Proper permission checks using `hasPermission()` for better UX
+  - Proxy support with authentication via `ProxyConfiguration.newHttpClient()`
   - All security findings from Jenkins CodeQL scans resolved
 
 ### Version 1.0.0

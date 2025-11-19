@@ -24,14 +24,13 @@ public class DiversionUIHelper {
     public static ListBoxModel fillCredentialsIdItems(Item context, String credentialsId) {
         ListBoxModel items = new ListBoxModel();
         
-        // Check permissions
+        // Check permissions - USE_ITEM is sufficient (EXTENDED_READ implies it)
         if (context == null) {
             if (!jenkins.model.Jenkins.get().hasPermission(jenkins.model.Jenkins.ADMINISTER)) {
                 return items;
             }
         } else {
-            if (!context.hasPermission(Item.EXTENDED_READ) 
-                && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+            if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return items;
             }
         }
@@ -39,13 +38,21 @@ public class DiversionUIHelper {
         items.add("- Select credentials -", "");
         
         // Get all Secret Text credentials
+        // Note: ACL.SYSTEM2 is recommended but returns Spring Security Authentication,
+        // while CredentialsProvider.lookupCredentials expects Acegi Authentication.
+        // Using ACL.SYSTEM for now as it's compatible with the CredentialsProvider API.
+        // TODO: Update when CredentialsProvider API supports Spring Security Authentication
+        org.acegisecurity.Authentication auth;
+        if (context instanceof hudson.model.Queue.Task) {
+            auth = ((hudson.model.Queue.Task) context).getDefaultAuthentication();
+        } else {
+            auth = ACL.SYSTEM;
+        }
         List<StringCredentials> credentials = 
             CredentialsProvider.lookupCredentials(
                 StringCredentials.class,
                 context,
-                context instanceof hudson.model.Queue.Task 
-                    ? ((hudson.model.Queue.Task) context).getDefaultAuthentication()
-                    : ACL.SYSTEM,
+                auth,
                 Collections.emptyList()
             );
         
