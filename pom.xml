@@ -26,7 +26,7 @@
   
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>diversion-scm</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Diversion SCM Plugin</name>
   <description>Jenkins SCM plugin integrating with Diversion.dev repositories. Provides pipeline checkout (Legacy SCM) and Global Pipeline Library support (Modern SCM) with full changelog display.</description>
@@ -46,6 +46,8 @@
   </scm>
 
   <properties>
+    <revision>1</revision>
+    <changelist>-SNAPSHOT</changelist>
     <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
