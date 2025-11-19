@@ -4,7 +4,7 @@ A unified Jenkins SCM plugin that integrates with [Diversion](https://diversion.
 
 **Author:** Ian Bain (ibain@mac.com)  
 **License:** MIT  
-**Version:** 1.0.1-SNAPSHOT
+**Latest Version:** Available on [plugins.jenkins.io/diversion-scm](https://plugins.jenkins.io/diversion-scm/)
 
 ## Features
 
@@ -258,8 +258,12 @@ The plugin follows Jenkins plugin best practices:
 
 ## Recent Improvements
 
-### Version 1.0.1-SNAPSHOT
+### Version 1.0.1
 
+- ✅ **Fixed folder-scoped credentials**: Credentials created in folders now work correctly at runtime
+- ✅ **Credential tracking**: Added credential usage tracking for reporting
+- ✅ **Modern Credentials API**: Updated to use modern API pattern (no Authentication parameter)
+- ✅ **UI improvements**: Using `StandardListBoxModel` for proper credential display
 - ✅ Updated to Java 17 (matches Jenkins baseline requirements)
 - ✅ Migrated to BOM-based dependency management (cleaner, more maintainable)
 - ✅ Updated Jenkins baseline to 2.504.3

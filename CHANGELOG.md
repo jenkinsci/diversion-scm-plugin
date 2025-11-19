@@ -2,6 +2,32 @@
 
 All notable changes to the Jenkins Diversion SCM Plugin will be documented in this file.
 
+## [1.0.1] - 2025-11-19
+
+### Fixed
+- **Folder-scoped credentials**: Fixed credential lookup during build execution to properly resolve folder-scoped credentials using `findCredentialById()` with Run context
+- **Credential tracking**: Added `CredentialsProvider.track()` calls to enable credential usage reporting in Jenkins
+
+### Improved
+- **Modern Credentials API**: Updated to use modern Credentials API pattern (passing `null` for Authentication, letting Jenkins resolve security internally)
+- **UI improvements**: Changed to `StandardListBoxModel` from CredentialsPlugin for proper credential display formatting
+- **Proxy support**: Enhanced proxy configuration to use `ProxyConfiguration.newHttpClient()` which handles authentication automatically
+- **Permission checks**: Simplified permission checks to only verify `USE_ITEM` (EXTENDED_READ implies it)
+- **Better UX**: Changed from `checkPermission()` to `hasPermission()` for better user experience (returns empty list instead of error)
+- **Relaxed permissions**: Using `Jenkins.MANAGE` instead of `ADMINISTER` for more relaxed permission requirements
+
+### Security
+- **CSRF protection**: Added `@RequirePOST` annotations to all external API calls
+- **Credential enumeration protection**: Proper permission checks before accessing credentials
+- **Explicit permission checks**: Using `checkPermission()` and `hasPermission()` for better CodeQL recognition
+
+### Technical Details
+- Updated `DiversionApiClient` to accept `Run` context and use `findCredentialById()` during execution
+- Updated `DiversionSCM.checkout()` to track credential usage with `CredentialsProvider.track()`
+- Updated `DiversionUIHelper` to use `StandardListBoxModel` for credential dropdowns
+- Removed dependency on `ACL.SYSTEM`/`ACL.SYSTEM2` by using modern Credentials API pattern
+- Fixed XML declaration order in `config.jelly` (must come before `<?jelly escape-by-default?>`)
+
 ## [1.0.0] - 2025-11-17
 
 ### Added
