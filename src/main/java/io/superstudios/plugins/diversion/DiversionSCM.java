@@ -21,11 +21,13 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -153,7 +155,20 @@ public class DiversionSCM extends SCM {
                 throw new IOException("Credentials ID is null or empty. Please configure Diversion credentials in Jenkins.");
             }
             
-            DiversionApiClient client = new DiversionApiClient(credentialsId);
+            // Track credential usage for reporting
+            // Use findCredentialById with Run context (supports folder-scoped credentials)
+            StandardCredentials credentials = CredentialsProvider.findCredentialById(
+                credentialsId,
+                StandardCredentials.class,
+                build,
+                Collections.emptyList()
+            );
+            if (credentials != null) {
+                CredentialsProvider.track(build, credentials);
+            }
+            
+            // Create client with Run context for proper credential resolution
+            DiversionApiClient client = new DiversionApiClient(credentialsId, build);
             
             // Get repository details
             listener.getLogger().println("Getting repository details...");

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
@@ -35,9 +36,26 @@ public class DiversionApiClient {
     
     private final String credentialsId;
     private final HttpClient httpClient;
+    private final Run<?, ?> run; // Run context for credential lookup (supports folder-scoped credentials)
     
+    /**
+     * Constructor for use during a Run (build execution)
+     * @param credentialsId The credential ID to use
+     * @param run The Run context (used to resolve folder-scoped credentials)
+     */
+    public DiversionApiClient(String credentialsId, Run<?, ?> run) {
+        this.credentialsId = credentialsId;
+        this.run = run;
+        this.httpClient = createHttpClient();
+    }
+    
+    /**
+     * Constructor for use outside of a Run context (e.g., UI dropdowns)
+     * @param credentialsId The credential ID to use
+     */
     public DiversionApiClient(String credentialsId) {
         this.credentialsId = credentialsId;
+        this.run = null;
         this.httpClient = createHttpClient();
     }
     
@@ -58,19 +76,36 @@ public class DiversionApiClient {
     
     /**
      * Get the API token from Jenkins credentials
+     * Uses findCredentialById when ItemGroup context is available (during Run),
+     * falls back to lookupCredentials for UI contexts.
      */
     private String getApiToken() throws IOException {
         if (credentialsId == null || credentialsId.trim().isEmpty()) {
             throw new IOException("Diversion credentials ID is null or empty");
         }
         
-        StandardCredentials credentials = CredentialsProvider.lookupCredentials(
-            StandardCredentials.class,
-            (hudson.model.ItemGroup) null
-        ).stream()
-        .filter(cred -> credentialsId.equals(cred.getId()))
-        .findFirst()
-        .orElse(null);
+        StandardCredentials credentials;
+        
+        if (run != null) {
+            // During a Run: use findCredentialById with Run context (supports folder-scoped credentials)
+            credentials = CredentialsProvider.findCredentialById(
+                credentialsId,
+                StringCredentials.class,
+                run,
+                Collections.emptyList()
+            );
+        } else {
+            // UI context: fallback to lookupCredentials (for backward compatibility)
+            credentials = CredentialsProvider.lookupCredentials(
+                StandardCredentials.class,
+                (hudson.model.ItemGroup<?>) null,
+                null,
+                Collections.emptyList()
+            ).stream()
+            .filter(cred -> credentialsId.equals(cred.getId()))
+            .findFirst()
+            .orElse(null);
+        }
         
         if (credentials == null) {
             throw new IOException("Diversion credentials not found: " + credentialsId);

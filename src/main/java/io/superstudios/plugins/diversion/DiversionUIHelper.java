@@ -5,6 +5,7 @@ import hudson.util.ListBoxModel;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 import java.util.Collections;
@@ -19,9 +20,10 @@ public class DiversionUIHelper {
     /**
      * Populate credentials dropdown with available StringCredentials.
      * Used by both DiversionSCM and DiversionSCMSource descriptors.
+     * Uses StandardListBoxModel from CredentialsPlugin for proper credential display.
      */
     public static ListBoxModel fillCredentialsIdItems(Item context, String credentialsId) {
-        ListBoxModel items = new ListBoxModel();
+        StandardListBoxModel items = new StandardListBoxModel();
         
         // Check permissions - USE_ITEM is sufficient (EXTENDED_READ implies it)
         if (context == null) {
