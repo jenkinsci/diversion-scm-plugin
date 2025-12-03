@@ -237,7 +237,7 @@ public class DiversionSCMSource extends SCMSource {
             if (context == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     return new ListBoxModel();
-                }
+            }
             } else {
                 if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
@@ -257,7 +257,7 @@ public class DiversionSCMSource extends SCMSource {
             if (context == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     return new ListBoxModel();
-                }
+            }
             } else {
                 if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();

@@ -20,9 +20,9 @@
           <td><j:choose>
             <j:when test="${it.diversionAuthor != null and it.diversionAuthor.name != null}">
               ${it.diversionAuthor.name}
-              <j:if test="${it.diversionAuthor.email != null and it.diversionAuthor.email != ''}">
-                &lt;${it.diversionAuthor.email}&gt;
-              </j:if>
+            <j:if test="${it.diversionAuthor.email != null and it.diversionAuthor.email != ''}">
+              &lt;${it.diversionAuthor.email}&gt;
+            </j:if>
             </j:when>
             <j:otherwise>${it.author != null ? it.author.displayName : 'Unknown'}</j:otherwise>
           </j:choose></td>

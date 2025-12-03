@@ -22,6 +22,7 @@ public class DiversionSCMFile extends SCMFile {
     private final String branchId;
     private final String path;
     private Boolean isDirectory;
+    private String resolvedPath; // Cached resolved path for script auto-detection
     
     protected DiversionSCMFile(@NonNull DiversionSCMFileSystem fileSystem, @NonNull String path,
                                DiversionApiClient apiClient, String repositoryId, String branchId) {
@@ -121,6 +122,24 @@ public class DiversionSCMFile extends SCMFile {
         return 0;
     }
     
+    /**
+     * Get the effective path for this file, resolving script auto-detection if needed.
+     */
+    private String getEffectivePath() {
+        if (resolvedPath != null) {
+            return resolvedPath;
+        }
+        
+        // Try to resolve the path (for script auto-detection)
+        String resolved = fileSystem.resolveScriptPath(path);
+        if (resolved != null) {
+            resolvedPath = resolved;
+            return resolved;
+        }
+        
+        return path;
+    }
+    
     @Override
     @NonNull
     protected Type type() throws IOException, InterruptedException {
@@ -128,10 +147,12 @@ public class DiversionSCMFile extends SCMFile {
             return isDirectory ? Type.DIRECTORY : Type.REGULAR_FILE;
         }
         
+        String effectivePath = getEffectivePath();
+        
         // Determine if this is a file or directory by checking the file tree
         try {
             // If path is empty or is a known directory structure, it's a directory
-            if (path.isEmpty() || path.equals("vars") || path.equals("src") || path.equals("resources")) {
+            if (effectivePath.isEmpty() || effectivePath.equals("vars") || effectivePath.equals("src") || effectivePath.equals("resources")) {
                 isDirectory = true;
                 return Type.DIRECTORY;
             }
@@ -140,7 +161,7 @@ public class DiversionSCMFile extends SCMFile {
             List<DiversionFile> files = apiClient.getFileTree(repositoryId, branchId);
             
             // First check if any files start with this path (it's a directory)
-            String searchPrefix = path + "/";
+            String searchPrefix = effectivePath + "/";
             boolean hasChildren = false;
             for (DiversionFile file : files) {
                 if (file.getPath() != null && file.getPath().startsWith(searchPrefix)) {
@@ -156,7 +177,7 @@ public class DiversionSCMFile extends SCMFile {
             
             // Check if this exact path exists as a file
             for (DiversionFile file : files) {
-                if (path.equals(file.getPath())) {
+                if (effectivePath.equals(file.getPath())) {
                     isDirectory = false;
                     return Type.REGULAR_FILE;
                 }
@@ -173,8 +194,10 @@ public class DiversionSCMFile extends SCMFile {
     @Override
     @NonNull
     public InputStream content() throws IOException, InterruptedException {
-        // Get file content from Diversion API
-        String fileContent = apiClient.getFileContent(repositoryId, branchId, path);
+        // Get file content from Diversion API using the effective path
+        // This enables script auto-detection (e.g., "Jenkinsfile" -> "simple-test.groovy")
+        String effectivePath = getEffectivePath();
+        String fileContent = apiClient.getFileContent(repositoryId, branchId, effectivePath);
         return new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
     }
     
