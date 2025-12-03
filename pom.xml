@@ -9,7 +9,7 @@
     <version>5.28</version>
     <relativePath />
   </parent>
-  
+
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -23,7 +23,7 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-  
+
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>diversion-scm</artifactId>
   <version>${changelist}</version>
@@ -63,45 +63,45 @@
     </dependency>
   </dependencies>
   </dependencyManagement>
-
+    
  <dependencies>
    <!-- Jenkins SCM API (plugin dependency, provided by Jenkins at runtime) -->
-   <dependency>
-     <groupId>org.jenkins-ci.plugins</groupId>
-     <artifactId>scm-api</artifactId>
-   </dependency>
-   
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>scm-api</artifactId>
+    </dependency>
+    
    <!-- Jenkins Credentials plugin (provided by Jenkins at runtime) -->
-   <dependency>
-     <groupId>org.jenkins-ci.plugins</groupId>
-     <artifactId>credentials</artifactId>
-   </dependency>
-   
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
+    </dependency>
+    
    <!-- Plain Credentials - needed for StringCredentials type -->
    <!-- maven-hpi-plugin requires compile scope for testing -->
-   <dependency>
-     <groupId>org.jenkins-ci.plugins</groupId>
-     <artifactId>plain-credentials</artifactId>
-   </dependency>
-   
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>plain-credentials</artifactId>
+    </dependency>
+    
    <!-- Jackson2 API - needed for JSON parsing (provided by Jenkins) -->
-   <dependency>
+    <dependency>
      <groupId>org.jenkins-ci.plugins</groupId>
      <artifactId>jackson2-api</artifactId>
-   </dependency>
-  
+    </dependency>
+    
   <!-- Optional: Global Pipeline Library support
        Commented out to avoid forcing installation of a deprecated plugin.
   -->
-  <!--
-  <dependency>
-    <groupId>org.jenkins-ci.plugins.workflow</groupId>
-    <artifactId>pipeline-groovy-lib</artifactId>
+    <!--
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>pipeline-groovy-lib</artifactId>
     <scope>provided</scope>
     <optional>true</optional>
-  </dependency>
-  -->
-</dependencies>
+    </dependency>
+    -->
+  </dependencies>
 
 
   <build>

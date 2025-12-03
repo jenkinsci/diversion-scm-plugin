@@ -57,14 +57,26 @@ public class DiversionSCMFileSystemBuilder extends SCMFileSystem.Builder {
             libraryPath = "";  // Root of repository
         }
         
-        // Create and return the file system
-        return new DiversionSCMFileSystem(
+        // Get the configured script path for pipeline script resolution
+        String scriptPath = diversionSCM.getScriptPath();
+        
+        // Create and return the file system with script path for smart resolution
+        DiversionSCMFileSystem fs = new DiversionSCMFileSystem(
             diversionSCM.getRepositoryId(),
             diversionSCM.getBranch(),
             diversionSCM.getCredentialsId(),
             libraryPath,
             rev
         );
+        
+        // Pass job name for auto-detection if no explicit script path
+        if (scriptPath == null || scriptPath.isEmpty()) {
+            fs.setJobName(owner.getName());
+        } else {
+            fs.setConfiguredScriptPath(scriptPath);
+        }
+        
+        return fs;
     }
     
     @Override

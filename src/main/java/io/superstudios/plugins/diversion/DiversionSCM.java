@@ -96,9 +96,15 @@ public class DiversionSCM extends SCM {
             return scriptPath;
         }
         
-        // Auto-detect: search for job name + .groovy anywhere in the repository
+        // Auto-detect: search for job name with various patterns
         String jobName = build.getParent().getName();
-        String expectedFileName = jobName + ".groovy";
+        
+        // Try multiple file name patterns based on job name
+        String[] expectedFileNames = {
+            jobName + ".groovy",  // e.g., "simple-test.groovy"
+            jobName,               // e.g., "Jenkinsfile-demo" (no extension)
+            "Jenkinsfile"          // Standard Jenkinsfile anywhere in repo
+        };
         
         try {
             DiversionApiClient client = new DiversionApiClient(credentialsId);
@@ -106,31 +112,13 @@ public class DiversionSCM extends SCM {
             // Get the file tree to search for the script
             List<DiversionFile> files = client.getFileTree(repositoryId, branch);
             
-            // Search for the script file anywhere in the repository
-            for (DiversionFile file : files) {
-                String path = file.getPath();
-                if (path.endsWith("/" + expectedFileName) || path.equals(expectedFileName)) {
-                    return path;
-                }
-            }
-            
-            // Fallback: try common locations
-            String[] commonPaths = {
-                "Meta/Jenkins/" + expectedFileName,
-                "Jenkins/" + expectedFileName,
-                "scripts/" + expectedFileName,
-                "pipeline/" + expectedFileName,
-                expectedFileName
-            };
-            
-            for (String path : commonPaths) {
-                try {
-                    // Try to get the file content to see if it exists
-                    client.getFileContent(repositoryId, branch, path);
-                    return path; // File exists, return this path
-                } catch (IOException | InterruptedException e) {
-                    // File doesn't exist at this path, try next
-                    continue;
+            // Try each pattern in order of preference
+            for (String expectedFileName : expectedFileNames) {
+                for (DiversionFile file : files) {
+                    String path = file.getPath();
+                    if (path != null && (path.endsWith("/" + expectedFileName) || path.equals(expectedFileName))) {
+                        return path;
+                    }
                 }
             }
             
@@ -138,8 +126,8 @@ public class DiversionSCM extends SCM {
             // If search fails, fall back to simple name
         }
         
-        // Final fallback: just use the job name
-        return expectedFileName;
+        // Final fallback: just use the job name + .groovy
+        return jobName + ".groovy";
     }
     
     @Override
@@ -333,29 +321,29 @@ public class DiversionSCM extends SCM {
                         
                         // Write changelog as XML
                         try (java.io.FileWriter writer = new java.io.FileWriter(changelogFile, java.nio.charset.StandardCharsets.UTF_8)) {
-                            writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-                            writer.write("<changelog>\n");
+                        writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+                        writer.write("<changelog>\n");
+                        
+                        for (DiversionCommit commit : commits) {
+                            writer.write("  <entry>\n");
+                            writer.write("    <commitId>" + escapeXml(commit.getCommitId()) + "</commitId>\n");
+                            writer.write("    <msg>" + escapeXml(commit.getCommitMessage()) + "</msg>\n");
+                            writer.write("    <author>" + escapeXml(commit.getAuthor().getName()) + "</author>\n");
+                            writer.write("    <timestamp>" + commit.getCreatedTs() + "</timestamp>\n");
                             
-                            for (DiversionCommit commit : commits) {
-                                writer.write("  <entry>\n");
-                                writer.write("    <commitId>" + escapeXml(commit.getCommitId()) + "</commitId>\n");
-                                writer.write("    <msg>" + escapeXml(commit.getCommitMessage()) + "</msg>\n");
-                                writer.write("    <author>" + escapeXml(commit.getAuthor().getName()) + "</author>\n");
-                                writer.write("    <timestamp>" + commit.getCreatedTs() + "</timestamp>\n");
-                                
-                                // Add changed files if available
-                                if (commit.getChangedFiles() != null && !commit.getChangedFiles().isEmpty()) {
-                                    writer.write("    <files>\n");
-                                    for (String file : commit.getChangedFiles()) {
-                                        writer.write("      <file>" + escapeXml(file) + "</file>\n");
-                                    }
-                                    writer.write("    </files>\n");
+                            // Add changed files if available
+                            if (commit.getChangedFiles() != null && !commit.getChangedFiles().isEmpty()) {
+                                writer.write("    <files>\n");
+                                for (String file : commit.getChangedFiles()) {
+                                    writer.write("      <file>" + escapeXml(file) + "</file>\n");
                                 }
-                                
-                                writer.write("  </entry>\n");
+                                writer.write("    </files>\n");
                             }
                             
-                            writer.write("</changelog>\n");
+                            writer.write("  </entry>\n");
+                        }
+                        
+                        writer.write("</changelog>\n");
                         }
                         
                         listener.getLogger().println("Changelog file created with " + commits.size() + " commits");
@@ -368,30 +356,6 @@ public class DiversionSCM extends SCM {
             
             listener.getLogger().println("Checkout completed successfully");
             
-            // For Pipeline jobs, create SCM checkout action for change detection
-            // This is what enables the "Changes" section to work
-            try {
-                if (build.getClass().getName().contains("WorkflowRun")) {
-                    // Use reflection to avoid dependency issues
-                    Object workflowRun = build;
-                    Class<?> workflowRunClass = workflowRun.getClass();
-                    
-                    // Create SCMCheckout action
-                    Class<?> scmCheckoutClass = Class.forName("org.jenkinsci.plugins.workflow.job.WorkflowRun$SCMCheckout");
-                    Object scmCheckout = scmCheckoutClass.getConstructor(SCM.class).newInstance(this);
-                    
-                    // Add the action to the build
-                    java.util.List<Object> actions = (java.util.List<Object>) workflowRunClass.getMethod("getActions").invoke(workflowRun);
-                    actions.add(scmCheckout);
-                    
-                    listener.getLogger().println("Created SCM checkout action for change detection");
-                }
-            } catch (ReflectiveOperationException e) {
-                // If we can't create the SCM checkout action, that's okay
-                // The build will still work, just without change detection
-                listener.getLogger().println("Note: Could not create SCM checkout action: " + e.getMessage());
-            }
-            
         } catch (IOException | InterruptedException e) {
             listener.getLogger().println("Error during checkout: " + e.getMessage());
             if (e.getCause() != null) {
@@ -401,7 +365,7 @@ public class DiversionSCM extends SCM {
             if (e instanceof IOException) {
                 throw (IOException) e;
             } else {
-                throw new IOException("Failed to checkout from Diversion: " + e.getMessage(), e);
+            throw new IOException("Failed to checkout from Diversion: " + e.getMessage(), e);
             }
         }
     }
@@ -476,7 +440,7 @@ public class DiversionSCM extends SCM {
             if (context == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     return new ListBoxModel();
-                }
+            }
             } else {
                 if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();
@@ -496,7 +460,7 @@ public class DiversionSCM extends SCM {
             if (context == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     return new ListBoxModel();
-                }
+            }
             } else {
                 if (!context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return new ListBoxModel();

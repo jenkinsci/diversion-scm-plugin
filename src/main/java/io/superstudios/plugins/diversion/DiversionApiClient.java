@@ -97,14 +97,14 @@ public class DiversionApiClient {
         } else {
             // UI context: fallback to lookupCredentials (for backward compatibility)
             credentials = CredentialsProvider.lookupCredentials(
-                StandardCredentials.class,
+            StandardCredentials.class,
                 (hudson.model.ItemGroup<?>) null,
                 null,
                 Collections.emptyList()
-            ).stream()
-            .filter(cred -> credentialsId.equals(cred.getId()))
-            .findFirst()
-            .orElse(null);
+        ).stream()
+        .filter(cred -> credentialsId.equals(cred.getId()))
+        .findFirst()
+        .orElse(null);
         }
         
         if (credentials == null) {
@@ -387,11 +387,11 @@ public class DiversionApiClient {
         
         if (commitId == null || commitId.isEmpty()) {
             // Fallback: try to get the first commit from the list
-            List<DiversionCommit> commits = listCommits(repositoryId, 1);
-            if (commits.isEmpty()) {
-                throw new IOException("No commits found for repository: " + repositoryId);
-            }
-            return commits.get(0);
+        List<DiversionCommit> commits = listCommits(repositoryId, 1);
+        if (commits.isEmpty()) {
+            throw new IOException("No commits found for repository: " + repositoryId);
+        }
+        return commits.get(0);
         }
         
         // Get the actual commit details using the commit ID
