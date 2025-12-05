@@ -8,6 +8,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.PollingResult;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
@@ -384,6 +385,79 @@ public class DiversionSCM extends SCM {
             listener.getLogger().println("Warning: Could not calculate revision state: " + e.getMessage());
             return new SCMRevisionState() {};
         }
+    }
+    
+    /**
+     * Compare the remote repository state with the last built revision.
+     * This is the core method called during SCM polling to detect changes.
+     * 
+     * @param project The job being polled
+     * @param launcher The launcher
+     * @param workspace The workspace (may be null for lightweight checkout)
+     * @param listener For logging
+     * @param baseline The revision state from the last build
+     * @return PollingResult indicating whether changes were found
+     */
+    @Override
+    public PollingResult compareRemoteRevisionWith(@NonNull Job<?, ?> project,
+                                                   @CheckForNull Launcher launcher,
+                                                   @CheckForNull FilePath workspace,
+                                                   @NonNull TaskListener listener,
+                                                   @NonNull SCMRevisionState baseline)
+                                                   throws IOException, InterruptedException {
+        
+        listener.getLogger().println("Polling Diversion repository: " + repositoryId + " (branch: " + branch + ")");
+        
+        try {
+            DiversionApiClient client = new DiversionApiClient(credentialsId);
+            DiversionCommit latestCommit = client.getLatestCommit(repositoryId, branch);
+            String remoteCommitId = latestCommit.getCommitId();
+            
+            listener.getLogger().println("Latest remote commit: " + remoteCommitId);
+            
+            // Check if we have a valid baseline to compare against
+            if (baseline instanceof DiversionSCMRevisionState) {
+                DiversionSCMRevisionState diversionBaseline = (DiversionSCMRevisionState) baseline;
+                String baselineCommitId = diversionBaseline.getCommitId();
+                
+                listener.getLogger().println("Last built commit: " + baselineCommitId);
+                
+                if (remoteCommitId.equals(baselineCommitId)) {
+                    listener.getLogger().println("No changes detected");
+                    return PollingResult.NO_CHANGES;
+                } else {
+                    listener.getLogger().println("Changes detected! Triggering build.");
+                    return PollingResult.SIGNIFICANT;
+                }
+            } else {
+                // No valid baseline (first build or different SCM type)
+                listener.getLogger().println("No valid baseline found - treating as changed");
+                return PollingResult.BUILD_NOW;
+            }
+            
+        } catch (Exception e) {
+            listener.getLogger().println("Error during polling: " + e.getMessage());
+            e.printStackTrace(listener.getLogger());
+            // Don't trigger builds on error - better to fail silently than spam builds
+            return PollingResult.NO_CHANGES;
+        }
+    }
+    
+    /**
+     * Tell Jenkins we support polling.
+     */
+    @Override
+    public boolean supportsPolling() {
+        return true;
+    }
+    
+    /**
+     * Tell Jenkins we don't need a workspace for polling.
+     * We only need API access to check for new commits.
+     */
+    @Override
+    public boolean requiresWorkspaceForPolling() {
+        return false;
     }
     
     @Override
