@@ -220,17 +220,17 @@ public class DiversionSCM extends SCM {
             }
             
             // Write changelog file if provided
-            // Use a flag to ensure we only write changelog once per build (prefer script checkout over library)
+            // Smart duplicate prevention: During library checkout, we check if the pipeline's
+            // SCM is configured to use the same Diversion repository. If so, we skip writing
+            // the library changelog to prevent duplicates.
             if (changelogFile != null) {
                 boolean shouldWriteChangelog = false;
+                boolean skipForSameRepo = false;
                 
-                // Check if this is the first checkout for this build
+                // Use build ID to track state across checkouts
+                String buildKey = build.getExternalizableId();
+                
                 synchronized (build) {
-                    String changelogKey = "diversion.changelog.written";
-                    Object changelogWritten = build.getAction(hudson.model.ParametersAction.class);
-                    
-                    // Use build number + hash as a simple way to track if we've written changelog
-                    String buildKey = build.getExternalizableId();
                     String alreadyWritten = System.getProperty(buildKey + ".changelog");
                     
                     if (alreadyWritten == null) {
@@ -241,19 +241,38 @@ public class DiversionSCM extends SCM {
                             System.setProperty(buildKey + ".changelog", "script");
                             listener.getLogger().println("Creating changelog (script checkout)...");
                         } else {
-                            // Library checkout - only write if it's the first checkout
-                            shouldWriteChangelog = true;
-                            System.setProperty(buildKey + ".changelog", "library");
-                            listener.getLogger().println("Creating changelog (library checkout)...");
+                            // Library checkout - check if pipeline uses the same repo
+                            String pipelineRepoId = getPipelineRepositoryId(build, listener);
+                            if (pipelineRepoId != null && pipelineRepoId.equals(repositoryId)) {
+                                // Same repo! Skip library changelog to prevent duplicates
+                                skipForSameRepo = true;
+                                System.setProperty(buildKey + ".changelog", "library-skipped");
+                                listener.getLogger().println("Library and pipeline use same repository (" + repositoryId + ") - skipping library changelog to prevent duplicates");
+                            } else {
+                                // Different repo or couldn't determine - write changelog
+                                shouldWriteChangelog = true;
+                                System.setProperty(buildKey + ".changelog", "library");
+                                if (pipelineRepoId != null) {
+                                    listener.getLogger().println("Library uses different repository than pipeline - creating changelog");
+                                } else {
+                                    listener.getLogger().println("Creating changelog (library checkout)...");
+                                }
+                            }
                         }
-                    } else if (alreadyWritten.equals("library") && !isLibraryCheckout) {
-                        // We wrote changelog for library, but now we have a script checkout
-                        // Overwrite with script checkout (preferred)
+                    } else if ((alreadyWritten.equals("library") || alreadyWritten.equals("library-skipped")) && !isLibraryCheckout) {
+                        // Library checked out first, now script checkout
                         shouldWriteChangelog = true;
                         System.setProperty(buildKey + ".changelog", "script");
-                        listener.getLogger().println("Updating changelog (script checkout - preferred over library)...");
+                        listener.getLogger().println("Creating changelog (script checkout)...");
                     } else {
                         listener.getLogger().println("Skipping changelog (already written for this build)");
+                    }
+                }
+                
+                // Write empty changelog if we're skipping for same-repo
+                if (skipForSameRepo) {
+                    try (java.io.FileWriter writer = new java.io.FileWriter(changelogFile, java.nio.charset.StandardCharsets.UTF_8)) {
+                        writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<changelog>\n</changelog>\n");
                     }
                 }
                 
@@ -463,6 +482,44 @@ public class DiversionSCM extends SCM {
     @Override
     public hudson.scm.ChangeLogParser createChangeLogParser() {
         return new DiversionChangeLogParser();
+    }
+    
+    /**
+     * Get the repository ID configured for the pipeline's SCM (if it's a DiversionSCM).
+     * This allows us to detect when a library checkout is from the same repo as the pipeline,
+     * so we can skip writing duplicate changelog entries.
+     * 
+     * @param build The current build
+     * @param listener For logging
+     * @return The repository ID if the pipeline uses DiversionSCM, null otherwise
+     */
+    private String getPipelineRepositoryId(Run<?, ?> build, TaskListener listener) {
+        try {
+            Job<?, ?> job = build.getParent();
+            
+            // Check if this is a WorkflowJob (pipeline)
+            if (job.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob")) {
+                // Use reflection to access the flow definition
+                java.lang.reflect.Method getDefinition = job.getClass().getMethod("getDefinition");
+                Object definition = getDefinition.invoke(job);
+                
+                if (definition != null && definition.getClass().getName().equals("org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition")) {
+                    // This is a "Pipeline script from SCM" job
+                    java.lang.reflect.Method getScm = definition.getClass().getMethod("getScm");
+                    Object scm = getScm.invoke(definition);
+                    
+                    if (scm instanceof DiversionSCM) {
+                        String pipelineRepoId = ((DiversionSCM) scm).getRepositoryId();
+                        listener.getLogger().println("Pipeline is configured with Diversion repository: " + pipelineRepoId);
+                        return pipelineRepoId;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Couldn't determine pipeline SCM - not a problem, we'll just write the changelog
+            listener.getLogger().println("Note: Could not determine pipeline SCM type: " + e.getMessage());
+        }
+        return null;
     }
     
     /**
