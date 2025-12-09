@@ -9,11 +9,31 @@ All notable changes to the Jenkins Diversion SCM Plugin will be documented in th
 ### Fixed
 - **Automatic duplicate commit prevention**: When a library checkout occurs, the plugin now checks if the pipeline's SCM is configured to use the same Diversion repository. If so, the library writes an empty changelog, preventing duplicate commits in the build status grid. This works automatically without requiring any user configuration changes.
 
+### How It Works
+During library checkout, the plugin:
+1. Accesses the pipeline job via `build.getParent()`
+2. Uses reflection to get `CpsScmFlowDefinition` (for "Pipeline script from SCM" jobs)
+3. Extracts the configured SCM's repository ID
+4. Compares with the library's repository ID
+5. If **same repo**: writes empty changelog → prevents duplicates
+6. If **different repo**: writes normal changelog → both changelogs shown
+
 ### Technical Details
-- Added `getPipelineRepositoryId()` method that uses reflection to access the pipeline's `CpsScmFlowDefinition` and extract the configured SCM's repository ID
-- During library checkout, compares library repo ID with pipeline repo ID
-- If same repo: writes empty changelog (prevents duplicates)
-- If different repo: writes normal changelog (shows library changes)
+- Added `getPipelineRepositoryId()` method using reflection to access `WorkflowJob.getDefinition().getScm()`
+- Library checkout stores repo info and checks pipeline config before writing changelog
+- Empty changelog written for same-repo cases: `<changelog></changelog>`
+- Console output shows detection: "Library and pipeline use same repository (dv.repo.xxx) - skipping library changelog"
+
+### Tested
+- **Environment**: Local Docker Jenkins (jenkins/jenkins:latest)
+- **Test case**: Pipeline job with `@Library` from same Diversion repo as pipeline script
+- **Before fix**: Build status grid showed "2 commits" (duplicates)
+- **After fix**: Build status grid shows "1 commit" (correct)
+- **Console verification**: 
+  ```
+  Pipeline is configured with Diversion repository: dv.repo.ce476570-2c46-4fc4-8c4a-541dd6a6d204
+  Library and pipeline use same repository (dv.repo.ce476570-2c46-4fc4-8c4a-541dd6a6d204) - skipping library changelog to prevent duplicates
+  ```
 
 ### Improved
 - **README cleanup**: Moved development instructions to DEVELOPMENT.md and version history to CHANGELOG.md
