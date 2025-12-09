@@ -2,6 +2,26 @@
 
 All notable changes to the Jenkins Diversion SCM Plugin will be documented in this file.
 
+> **Note:** Starting December 2025, versions are identified by commit number rather than semantic versioning.
+
+## 2025-12-09
+
+### Fixed
+- **Automatic duplicate commit prevention**: When a library checkout occurs, the plugin now checks if the pipeline's SCM is configured to use the same Diversion repository. If so, the library writes an empty changelog, preventing duplicate commits in the build status grid. This works automatically without requiring any user configuration changes.
+
+### Technical Details
+- Added `getPipelineRepositoryId()` method that uses reflection to access the pipeline's `CpsScmFlowDefinition` and extract the configured SCM's repository ID
+- During library checkout, compares library repo ID with pipeline repo ID
+- If same repo: writes empty changelog (prevents duplicates)
+- If different repo: writes normal changelog (shows library changes)
+
+### Improved
+- **README cleanup**: Moved development instructions to DEVELOPMENT.md and version history to CHANGELOG.md
+- **Better troubleshooting docs**: Added troubleshooting entry for duplicate commits issue
+- **Configuration script**: Updated `configure-diversion-library.groovy` to set `includeInChangesets(false)` by default (as a fallback)
+
+---
+
 ## [1.0.1] - 2025-11-19
 
 ### Fixed

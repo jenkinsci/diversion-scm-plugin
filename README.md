@@ -96,6 +96,15 @@ The plugin will automatically search for a `.groovy` file matching your job name
    - **Default Branch**: Branch to checkout (dropdown populates automatically)
    - **Library Base Path**: Path to your folder containing `vars/`, `src/`, `resources/` directories (e.g., `Meta/Jenkins/SharedLib`)
 
+#### Important: Prevent Duplicate Commits in Changelog
+
+**If your pipeline script and shared library are in the same Diversion repository**, you should **uncheck** the "Include @Library changes in job recent changes" option. Otherwise, Jenkins will show duplicate commit entries in the build status grid (one from the library checkout and one from the script checkout).
+
+- In the library configuration, uncheck: **"Include @Library changes in job recent changes"**
+- Or when configuring via Groovy script, add: `libraryConfig.setIncludeInChangesets(false)`
+
+This is recommended whenever the library is stored in the same repository as your pipeline scripts to avoid confusing duplicate entries.
+
 #### Using the Library in Pipeline Jobs:
 
 ```groovy
@@ -163,69 +172,7 @@ This plugin integrates with the [Diversion API](https://docs.diversion.dev/api-r
 
 ## Development
 
-### Building the Plugin
-
-```bash
-# Clean and compile
-mvn clean compile
-
-# Run tests
-mvn test
-
-# Package plugin (skips tests for faster builds)
-mvn clean package -DskipTests
-
-# Run Jenkins with plugin
-mvn hpi:run
-```
-
-### Project Structure
-
-```
-src/main/java/io/superstudios/plugins/diversion/
-├── DiversionSCM.java                  # Legacy SCM implementation
-├── DiversionSCMSource.java            # Modern SCM (Global Libraries)
-├── DiversionSCMFileSystem.java        # File system for library loading
-├── DiversionSCMFileSystemBuilder.java # Builder for file systems
-├── DiversionSCMHead.java             # SCM head (branch) representation
-├── DiversionSCMRevision.java         # SCM revision (commit) representation
-├── DiversionSCMRevisionState.java    # State tracking for builds
-├── DiversionChangeLogParser.java     # Parses changelog XML
-├── DiversionChangeLogSet.java        # Change log set container
-├── DiversionChangeLogEntry.java      # Individual changelog entry
-├── DiversionApiClient.java           # Diversion API client
-├── DiversionUIHelper.java            # Shared UI helper methods
-├── DiversionRepository.java          # Repository model
-├── DiversionBranch.java              # Branch model
-├── DiversionCommit.java               # Commit model
-├── DiversionFile.java                # File model
-├── DiversionAuthor.java              # Author model
-└── DiversionTag.java                 # Tag model (for future use)
-
-src/main/resources/
-├── index.jelly                       # Plugin index page
-└── io/superstudios/plugins/diversion/
-    ├── DiversionSCM/
-    │   ├── config.jelly              # Legacy SCM configuration UI
-    │   └── help-repositoryId.html    # Help text
-    ├── DiversionSCMSource/
-    │   ├── config.jelly              # Modern SCM configuration UI
-    │   └── help-libraryPath.html    # Help text
-    ├── DiversionChangeLogEntry/
-    │   ├── digest.jelly              # One-line summary template
-    │   └── index.jelly               # Detail page template
-    └── DiversionChangeLogSet/
-        └── index.jelly               # ChangeLogSet list template
-```
-
-### Code Quality
-
-The plugin follows Jenkins plugin best practices:
-- **Code Deduplication**: Shared UI logic in `DiversionUIHelper` class
-- **Proper Error Handling**: Graceful fallbacks for API failures
-- **Null Safety**: Comprehensive null checks throughout
-- **Documentation**: Javadoc comments on all public methods
-- **No Stale Code**: All code is actively used
+For build instructions, project structure, and contribution guidelines, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Troubleshooting
 
@@ -256,40 +203,15 @@ The plugin follows Jenkins plugin best practices:
    - Check that commits exist in the repository
    - Verify the changelog XML file exists in the build directory
 
-## Recent Improvements
+6. **Duplicate Commits in Build Status Grid**
+   - This happens when your pipeline script and shared library are in the same repository
+   - Jenkins creates changelog entries for both the script checkout and library checkout
+   - **Fix**: In the library configuration, uncheck "Include @Library changes in job recent changes"
+   - Or add `libraryConfig.setIncludeInChangesets(false)` when configuring via Groovy
 
-### Version 1.0.1
+## Changelog
 
-- ✅ **Fixed folder-scoped credentials**: Credentials created in folders now work correctly at runtime
-- ✅ **Credential tracking**: Added credential usage tracking for reporting
-- ✅ **Modern Credentials API**: Updated to use modern API pattern (no Authentication parameter)
-- ✅ **UI improvements**: Using `StandardListBoxModel` for proper credential display
-- ✅ Updated to Java 17 (matches Jenkins baseline requirements)
-- ✅ Migrated to BOM-based dependency management (cleaner, more maintainable)
-- ✅ Updated Jenkins baseline to 2.504.3
-- ✅ Improved dependency version management using Jenkins BOM
-- ✅ Updated parent POM to version 5.28 (Jenkins requirement)
-- ✅ Replaced direct dependencies with Jenkins API plugins:
-  - `httpclient` → `apache-httpcomponents-client-4-api`
-  - `jackson-databind` → `jackson2-api`
-- ✅ Added security scanning workflow and dependency update automation
-- ✅ **Security Enhancements:**
-  - Credential enumeration protection (permission checks before accessing credentials)
-  - CSRF protection (`@RequirePOST` annotations on external API calls)
-  - Proper permission checks using `hasPermission()` for better UX
-  - Proxy support with authentication via `ProxyConfiguration.newHttpClient()`
-  - All security findings from Jenkins CodeQL scans resolved
-
-### Version 1.0.0
-
-- ✅ Fixed changelog detail page display
-- ✅ Added commit ID display in Changes page list
-- ✅ Fixed changelog entry parent relationships
-- ✅ Improved global library reload detection (uses commit timestamps)
-- ✅ Code deduplication (created `DiversionUIHelper` class)
-- ✅ Removed stale code (workspaceId field)
-- ✅ Enhanced error handling and null safety
-- ✅ Improved Jelly templates with proper null checks
+For version history and recent improvements, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 
