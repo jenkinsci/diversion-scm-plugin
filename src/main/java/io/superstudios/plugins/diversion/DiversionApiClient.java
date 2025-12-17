@@ -2,25 +2,27 @@ package io.superstudios.plugins.diversion;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import hudson.model.Item;
 import hudson.model.Run;
 import hudson.ProxyConfiguration;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Client for interacting with Diversion API.
@@ -256,18 +258,30 @@ public class DiversionApiClient {
             String locationHeader = blobResponse.headers().firstValue("Location").orElse(null);
             if (locationHeader != null) {
                 // Follow the Location header to get the actual content
+                // Use byte array handler to properly handle potentially compressed content
                 HttpRequest contentRequest = HttpRequest.newBuilder()
                     .uri(URI.create(locationHeader))
                     .GET()
                     .build();
                 
-                HttpResponse<String> contentResponse = httpClient.send(contentRequest, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<byte[]> contentResponse = httpClient.send(contentRequest, HttpResponse.BodyHandlers.ofByteArray());
                 
                 if (contentResponse.statusCode() >= 400) {
-                    throw new IOException("Failed to get file content from Location URL: " + contentResponse.statusCode() + " - " + contentResponse.body());
+                    throw new IOException("Failed to get file content from Location URL: " + contentResponse.statusCode());
                 }
                 
-                return contentResponse.body();
+                byte[] contentBytes = contentResponse.body();
+                
+                // Check if content is gzip-compressed (magic bytes: 0x1F 0x8B)
+                if (contentBytes.length >= 2 && 
+                    (contentBytes[0] & 0xFF) == 0x1F && 
+                    (contentBytes[1] & 0xFF) == 0x8B) {
+                    // Decompress gzip content
+                    return decompressGzip(contentBytes);
+                }
+                
+                // Return as UTF-8 string
+                return new String(contentBytes, StandardCharsets.UTF_8);
             } else {
                 throw new IOException("Blob endpoint returned redirect but no Location header found");
             }
@@ -276,6 +290,24 @@ public class DiversionApiClient {
         }
         
         return blobResponse.body();
+    }
+    
+    /**
+     * Decompress gzip-compressed byte array to string
+     */
+    private String decompressGzip(byte[] compressed) throws IOException {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(compressed);
+             GZIPInputStream gzis = new GZIPInputStream(bais);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gzis.read(buffer)) != -1) {
+                baos.write(buffer, 0, len);
+            }
+            
+            return baos.toString(StandardCharsets.UTF_8.name());
+        }
     }
     
     /**
