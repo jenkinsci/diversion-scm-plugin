@@ -71,6 +71,7 @@ This guide helps you test that the plugin correctly uses the modern Credentials 
 
 **Expected Results:**
 - ✅ Each dropdown populates after selecting the previous one
+- ✅ Dropdown contents are sorted alphabetically by repo/branch name
 - ✅ No authentication errors
 - ✅ API calls succeed using the selected credential
 
