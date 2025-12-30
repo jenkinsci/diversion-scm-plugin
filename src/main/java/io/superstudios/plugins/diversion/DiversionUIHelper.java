@@ -77,6 +77,7 @@ public class DiversionUIHelper {
         try {
             DiversionApiClient client = new DiversionApiClient(credentialsId);
             List<DiversionRepository> repos = client.listRepositories();
+            Collections.sort(repos, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
             
             items.add("- Select repository -", "");
             for (DiversionRepository repo : repos) {
@@ -106,6 +107,7 @@ public class DiversionUIHelper {
         try {
             DiversionApiClient client = new DiversionApiClient(credentialsId);
             List<DiversionBranch> branches = client.listBranches(repositoryId);
+            Collections.sort(branches, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
             
             items.add("- Select branch -", "");
             for (DiversionBranch branch : branches) {
