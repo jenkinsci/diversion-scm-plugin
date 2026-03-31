@@ -29,6 +29,11 @@ permissions:
   checks: read
   contents: write
 
+env:
+  # Temporary compatibility flag for JavaScript actions until all dependencies
+  # are updated to native Node 24 support.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   maven-cd:
     uses: jenkins-infra/github-reusable-workflows/.github/workflows/maven-cd.yml@v1
