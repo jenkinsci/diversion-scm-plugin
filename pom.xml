@@ -41,7 +41,7 @@
   <url>https://github.com/jenkinsci/diversion-scm-plugin</url>
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/diversion-scm-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/diversion-scm-plugin.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/diversion-scm-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/diversion-scm-plugin</url>
   </scm>
 
