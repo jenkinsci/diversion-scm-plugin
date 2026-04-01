@@ -17,6 +17,13 @@ on:
         # Note: Change this default to true,
         #       if the checkbox should be checked by default.
         default: false
+      force_release:
+        required: false
+        type: boolean
+        description: |
+          Force a release publish and bypass CI/category gates
+          → Use only for manual emergency releases
+        default: false
   # If you don't want any automatic trigger in general, then
   # the following check_run trigger lines should all be commented.
   # Note: Consider the use case #2 config for 'validate_only' below
@@ -36,6 +43,7 @@ env:
 
 jobs:
   maven-cd:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.force_release == true) }}
     uses: jenkins-infra/github-reusable-workflows/.github/workflows/maven-cd.yml@v1
     with:
       # Comment / uncomment the validate_only config appropriate to your preference:
@@ -57,3 +65,25 @@ jobs:
     secrets:
       MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
       MAVEN_TOKEN: ${{ secrets.MAVEN_TOKEN }}
+
+  force-release:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.force_release == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Forced Release
+        uses: jenkins-infra/jenkins-maven-cd-action@v1.4.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_TOKEN: ${{ secrets.MAVEN_TOKEN }}
