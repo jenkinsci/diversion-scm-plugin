@@ -43,7 +43,6 @@ env:
 
 jobs:
   maven-cd:
-    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.force_release == true) }}
     uses: jenkins-infra/github-reusable-workflows/.github/workflows/maven-cd.yml@v1
     with:
       # Comment / uncomment the validate_only config appropriate to your preference:
@@ -54,7 +53,7 @@ jobs:
       #   - Perform a validation only run with drafting a release note,
       #     if manually triggered AND inputs.validate_only has been checked.
       #
-      validate_only: ${{ inputs.validate_only == true }}
+      validate_only: ${{ inputs.validate_only == true || inputs.force_release == true }}
       #
       # Alternative use case #2 (no automatic release):
       #   - Same as use case #1 - but:
@@ -68,6 +67,7 @@ jobs:
 
   force-release:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.force_release == true }}
+    needs: [maven-cd]
     runs-on: ubuntu-latest
     steps:
       - name: Check out
