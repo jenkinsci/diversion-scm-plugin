@@ -13,15 +13,20 @@ import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Client for interacting with Diversion API.
@@ -254,7 +259,7 @@ public class DiversionApiClient {
             .GET()
             .build();
         
-        HttpResponse<String> blobResponse = httpClient.send(blobRequest, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<byte[]> blobResponse = httpClient.send(blobRequest, HttpResponse.BodyHandlers.ofByteArray());
         
         // Handle redirects (204 or standard 3xx responses with Location header)
         int status = blobResponse.statusCode();
@@ -276,21 +281,61 @@ public class DiversionApiClient {
                 
                 HttpRequest contentRequest = contentRequestBuilder.build();
                 
-                HttpResponse<String> contentResponse = httpClient.send(contentRequest, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<byte[]> contentResponse = httpClient.send(contentRequest, HttpResponse.BodyHandlers.ofByteArray());
                 
                 if (contentResponse.statusCode() >= 400) {
-                    throw new IOException("Failed to get file content from Location URL: " + contentResponse.statusCode() + " - " + contentResponse.body());
+                    String responseBody = decodeContentBytes(contentResponse.body(), contentResponse.headers().firstValue("Content-Encoding").orElse(null));
+                    throw new IOException("Failed to get file content from Location URL: " + contentResponse.statusCode() + " - " + responseBody);
                 }
                 
-                return contentResponse.body();
+                return decodeContentBytes(contentResponse.body(), contentResponse.headers().firstValue("Content-Encoding").orElse(null));
             } else {
                 throw new IOException("Blob endpoint returned redirect but no Location header found");
             }
         } else if (blobResponse.statusCode() >= 400) {
-            throw new IOException("Failed to get file content: " + blobResponse.statusCode() + " - " + blobResponse.body());
+            String responseBody = decodeContentBytes(blobResponse.body(), blobResponse.headers().firstValue("Content-Encoding").orElse(null));
+            throw new IOException("Failed to get file content: " + blobResponse.statusCode() + " - " + responseBody);
         }
         
-        return blobResponse.body();
+        return decodeContentBytes(blobResponse.body(), blobResponse.headers().firstValue("Content-Encoding").orElse(null));
+    }
+
+    /**
+     * Decode byte payload to UTF-8 text, transparently handling gzip when present.
+     */
+    private String decodeContentBytes(byte[] contentBytes, String contentEncoding) throws IOException {
+        boolean gzipEncoded = isGzipEncoded(contentEncoding) || looksLikeGzip(contentBytes);
+        if (gzipEncoded) {
+            return decompressGzip(contentBytes);
+        }
+        return new String(contentBytes, StandardCharsets.UTF_8);
+    }
+
+    private boolean isGzipEncoded(String contentEncoding) {
+        if (contentEncoding == null) {
+            return false;
+        }
+        return contentEncoding.toLowerCase(Locale.ROOT).contains("gzip");
+    }
+
+    private boolean looksLikeGzip(byte[] contentBytes) {
+        return contentBytes != null
+            && contentBytes.length >= 2
+            && (contentBytes[0] & 0xFF) == 0x1F
+            && (contentBytes[1] & 0xFF) == 0x8B;
+    }
+
+    private String decompressGzip(byte[] compressed) throws IOException {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(compressed);
+             GZIPInputStream gzis = new GZIPInputStream(bais);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gzis.read(buffer)) != -1) {
+                baos.write(buffer, 0, len);
+            }
+            return baos.toString(StandardCharsets.UTF_8);
+        }
     }
     
     /**
