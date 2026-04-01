@@ -183,8 +183,9 @@ public class DiversionSCM extends SCM {
                 int downloadedCount = 0;
                 for (DiversionFile file : files) {
                     String filePath = file.getPath();
-                    // Only download files from the library directory
-                    if (filePath != null && filePath.startsWith(libPath + "/")) {
+                    // Only download regular files from the library directory.
+                    // Tree entries (directories) return 405 from the blob endpoint.
+                    if (filePath != null && filePath.startsWith(libPath + "/") && file.isFile()) {
                         try {
                             String content = client.getFileContent(repositoryId, branch, filePath);
                             // Remove the library path prefix so files are at workspace root
