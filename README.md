@@ -209,6 +209,11 @@ For build instructions, project structure, and contribution guidelines, see [DEV
    - **Fix**: In the library configuration, uncheck "Include @Library changes in job recent changes"
    - Or add `libraryConfig.setIncludeInChangesets(false)` when configuring via Groovy
 
+7. **Job / build page dies with a Jelly error**
+   - Symptom: opening the job or build page throws `No page found 'digest.jelly' for class ...DiversionChangeLogSet`
+   - Cause: Jenkins renders changelog summaries from `DiversionChangeLogSet/digest.jelly` (not the entry template)
+   - **Fix**: upgrade to a plugin build that includes that view (2026-08-31+)
+
 ## Changelog
 
 For version history and recent improvements, see [CHANGELOG.md](CHANGELOG.md).
