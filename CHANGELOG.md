@@ -4,6 +4,14 @@ All notable changes to the Jenkins Diversion SCM Plugin will be documented in th
 
 > **Note:** Starting December 2025, versions are identified by commit number rather than semantic versioning.
 
+## 2026-08-31
+
+### Fixed
+- **Job page 500 from missing changelog digest view**: Jenkins build/job status pages include `digest.jelly` on the `ChangeLogSet` (`RunWithSCM/changesets.jelly`). The plugin only shipped `DiversionChangeLogEntry/digest.jelly`, so Stapler threw `No page found 'digest.jelly' for class DiversionChangeLogSet` and the job page died. Added `DiversionChangeLogSet/digest.jelly`.
+- **Changelog Jelly NPEs**: Changes page used `cs.parent.run.url`, which 500s when the entry parent is unset. Detail links now use `it.run`. Entry digest no longer calls `it.author` / `User.get()`, which could also take down the job page.
+
+---
+
 ## 2025-12-09
 
 ### Fixed

@@ -1,15 +1,19 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <!-- This template renders the one-line summary of a change in the Changes page -->
+  <!-- One-line summary. Avoid it.author — User.get() can throw and 500 the job page. -->
   <j:set var="commitId" value="${it.commitId}"/>
-  <j:set var="authorName" value="${it.diversionAuthor != null ? it.diversionAuthor.name : (it.author != null ? it.author.displayName : 'Unknown')}"/>
   <j:choose>
     <j:when test="${commitId != null and commitId != ''}">
-      <b>${commitId}</b> — ${it.msg} — ${authorName}
+      <b>${commitId}</b>
     </j:when>
     <j:otherwise>
-      <b>Commit</b> — ${it.msg} — ${authorName}
+      <b>Commit</b>
     </j:otherwise>
   </j:choose>
+  <j:text> — </j:text>
+  ${it.msg}
+  <j:if test="${it.diversionAuthor != null and it.diversionAuthor.name != null and it.diversionAuthor.name != ''}">
+    <j:text> — </j:text>
+    ${it.diversionAuthor.name}
+  </j:if>
 </j:jelly>
-

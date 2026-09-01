@@ -1,15 +1,19 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <!-- Changes page. Use it.run, not cs.parent.run — parent can be null and 500 the page. -->
+  <!--
+    Required by jenkins.scm.RunWithSCM/changesets.jelly on the build/job page.
+    Missing this view 500s the whole page:
+    No page found 'digest.jelly' for class DiversionChangeLogSet
+  -->
   <j:choose>
     <j:when test="${it.emptySet}">
       ${%No changes.}
     </j:when>
     <j:otherwise>
+      ${%Summary}
       <ol>
         <j:forEach var="cs" items="${it.items}" varStatus="loop">
           <li>
-            <a name="detail${loop.index}"></a>
             <st:include it="${cs}" page="digest.jelly"/>
             <j:if test="${it.run != null}">
               <st:nbsp/>

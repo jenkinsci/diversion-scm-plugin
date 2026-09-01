@@ -41,8 +41,9 @@ work/
 # Compiled classes and build artifacts
 *.class
 *.stapler
-io/
-index.jelly
+# Leftover copies at the repo root only — do not ignore src/**/io/**
+/io/
+/index.jelly
 
 # Debug/test scripts
 debug-*.groovy
